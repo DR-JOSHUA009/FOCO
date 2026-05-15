@@ -1,6 +1,7 @@
 "use client";
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Excalidraw, exportToBlob, exportToSvg } from "@excalidraw/excalidraw";
+import "@excalidraw/excalidraw/index.css";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { AppState, BinaryFiles } from "@excalidraw/excalidraw/types/types";
 

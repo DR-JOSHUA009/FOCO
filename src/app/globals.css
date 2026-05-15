@@ -25,19 +25,3 @@ body {
     text-wrap: balance;
   }
 }
-
-/* Fix Excalidraw rendering conflicts with Tailwind */
-.excalidraw svg {
-  display: inline-block;
-  width: auto;
-  height: auto;
-}
-.excalidraw .visually-hidden {
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
-  clip: rect(1px 1px 1px 1px);
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap;
-}
