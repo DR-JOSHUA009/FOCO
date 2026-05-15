@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FOCOI - Iniciar Sesión</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#fcf8ff",
+                        "on-surface-variant": "#49454e",
+                        "on-primary-container": "#564475",
+                        "surface-tint": "#695587",
+                        "on-secondary-fixed-variant": "#1e4a69",
+                        "on-secondary-fixed": "#001e31",
+                        "primary-container": "#cbb4ed",
+                        "tertiary-container": "#c8c074",
+                        "outline-variant": "#cbc4cf",
+                        "primary": "#695587",
+                        "inverse-on-surface": "#f2efff",
+                        "tertiary": "#66601e",
+                        "surface": "#fcf8ff",
+                        "inverse-primary": "#d4bcf6",
+                        "on-surface": "#1a1a2e",
+                        "secondary-fixed": "#cce5ff",
+                        "on-primary-fixed-variant": "#503e6e",
+                        "secondary-container": "#b0d9fe",
+                        "primary-fixed-dim": "#d4bcf6",
+                        "secondary-fixed-dim": "#a2cbf0",
+                        "surface-dim": "#dad7f3",
+                        "on-secondary-container": "#365f7f",
+                        "surface-container-low": "#f5f2ff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#ecdcff",
+                        "on-tertiary-container": "#534e0d",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2f2e43",
+                        "outline": "#7b757f",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed-variant": "#4d4806",
+                        "secondary": "#396282",
+                        "surface-bright": "#fcf8ff",
+                        "tertiary-fixed-dim": "#d1c97c",
+                        "on-background": "#1a1a2e",
+                        "on-tertiary-fixed": "#1f1c00",
+                        "surface-container-highest": "#e2e0fc",
+                        "surface-variant": "#e2e0fc",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-high": "#e8e5ff",
+                        "surface-container": "#efecff",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed": "#eee595",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#231140"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "label-md": ["12px", {"lineHeight": "1", "letterSpacing": "0.04em", "fontWeight": "500"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-sm": ["11px", {"lineHeight": "1", "letterSpacing": "0.04em", "fontWeight": "500"}],
+                        "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-xl": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased overflow-hidden">
+<main class="flex h-screen w-full">
+<!-- Left Branding Section -->
+<section class="hidden lg:flex w-[45%] bg-[#FEFCFB] flex-col justify-center px-16 relative">
+<div class="max-w-md">
+<div class="flex items-baseline gap-1 mb-2">
+<span class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight">FOCO</span>
+<span class="font-headline-md text-headline-md text-primary uppercase">I</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-12">para los que van en serio</p>
+<div class="space-y-8">
+<div class="flex items-start gap-4">
+<div class="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-[16px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm mb-1">Productividad psicológica</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Diseñado para alinearse con tus ritmos cognitivos naturales.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-[16px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm mb-1">Estudio profundo sin ruido</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Elimina las distracciones digitales y entra en estado de flow.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div class="mt-1 flex-shrink-0 w-6 h-6 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-[16px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm mb-1">Gamificación académica</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Convierte tu disciplina en progreso tangible y recompensas.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Decorative Image Element -->
+<div class="absolute bottom-0 right-0 w-full h-1/3 opacity-10 pointer-events-none">
+<img alt="" class="w-full h-full object-cover" data-alt="A minimalist and high-utility workspace featuring a clean wooden desk with a single notebook and a high-end pen. The lighting is soft and natural, coming from a large window off-camera, creating a calm and intellectual mood. The color palette is dominated by soft whites and muted lavenders, reflecting a focused academic environment without any digital clutter or distractions." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDUg_o6urM9VtWFh2vBBy5V-BrZKA6NUSjGRaV1MqUfynm1p8KTqtz2yl_O4zwG4f0MmTyFGLlQCRmoHFuDfAaO9fnnDp5U3mrIfHjNnqRwE8_g0_RNWO5bT9LA9ZDmPoUgJsEplFjFIx45O2BWio77FZZpcJ5fWG2TYdXeCjBDyiy5dehsWE8GY0GkauU3qcqpvoJ7JkJ8ksN2kIseUc3CsM1A7OuJRozEZLUShhR5c3wsfwYh2eWmEY9KxmZUQGewHF8eOKp9DUf"/>
+</div>
+</section>
+<!-- Right Form Section -->
+<section class="w-full lg:w-[55%] bg-[#F4F5F7] flex items-center justify-center px-6">
+<div class="w-full max-w-[460px] bg-white rounded-xl shadow-sm p-10 border border-outline-variant">
+<!-- Logo for Mobile Only -->
+<div class="lg:hidden flex justify-center mb-8">
+<div class="flex items-baseline gap-1">
+<span class="font-headline-md text-headline-md text-on-surface uppercase tracking-tight">FOCO</span>
+<span class="font-headline-md text-headline-md text-primary uppercase">I</span>
+</div>
+</div>
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant mb-8">
+<button class="flex-1 pb-4 text-center font-label-md text-label-md text-primary border-b-2 border-primary">
+                        Iniciar Sesión
+                    </button>
+<button class="flex-1 pb-4 text-center font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors">
+                        Registrarse
+                    </button>
+</div>
+<!-- Form -->
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="block font-label-md text-label-md text-on-surface-variant" for="email">Email</label>
+<input class="w-full h-[40px] px-4 border border-outline-variant rounded-lg bg-surface-container-lowest focus:ring-2 focus:ring-primary-container focus:border-primary outline-none transition-all placeholder:text-outline" id="email" name="email" placeholder="estudiante@focoi.edu" type="email"/>
+<p class="text-[11px] text-error mt-1 hidden">Por favor, introduce un correo válido.</p>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-md text-label-md text-on-surface-variant" for="password">Contraseña</label>
+<a class="text-[11px] font-label-md text-primary hover:underline" href="#">¿Olvidaste tu contraseña?</a>
+</div>
+<input class="w-full h-[40px] px-4 border border-outline-variant rounded-lg bg-surface-container-lowest focus:ring-2 focus:ring-primary-container focus:border-primary outline-none transition-all placeholder:text-outline" id="password" name="password" placeholder="••••••••" type="password"/>
+<p class="text-[11px] text-error mt-1">La contraseña es obligatoria.</p>
+</div>
+<div class="flex items-center gap-2 pt-2">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary-container" id="remember" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface-variant select-none" for="remember">Recordar mi sesión</label>
+</div>
+<button class="w-full h-[44px] bg-primary-container text-on-primary-container font-headline-sm text-headline-sm rounded-lg hover:brightness-95 active:scale-[0.98] transition-all flex items-center justify-center mt-4 shadow-sm" type="submit">
+                        Acceder
+                    </button>
+</form>
+<div class="mt-8 pt-8 border-t border-outline-variant flex flex-col items-center gap-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant">O continúa con</p>
+<div class="flex gap-4 w-full">
+<button class="flex-1 h-[40px] border border-outline-variant rounded-lg flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+<img alt="Google" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsTqviuzeECIimmu24b0qqM22dXnmSE6I_OVMEn1Rb18JJfSQj9lWbocm69EGlkGwM_jIZMRjD5-m6-VUaIM6l-WWwuBA4xMBcxWQERmsDKHgMcd0e45Nb_BBRwtNVQ4BiWWWa33TlCU4Nh512RuNgel2zQuJNO_eR1y0Cp6eaUyuEFxRznPtrwiXOjNqehEUy_B1XvZmZ2UvNeZniCVQT7JpOgBKeu0-NCqGz_Cz321neV-90jOyPQ4cFPHvqJGfJueb3g2WM76hj"/>
+<span class="font-label-md text-label-md">Google</span>
+</button>
+<button class="flex-1 h-[40px] border border-outline-variant rounded-lg flex items-center justify-center gap-2 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<span class="font-label-md text-label-md">GitHub</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>
