@@ -36,10 +36,13 @@ const ExcalidrawWrapper = forwardRef<ExcalidrawWrapperRef, ExcalidrawWrapperProp
         });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
+        a.style.display = "none";
         a.href = url;
         a.download = `${name}.png`;
+        document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        setTimeout(() => window.URL.revokeObjectURL(url), 100);
       },
       downloadSvg: async (name: string) => {
         if (!excalidrawAPI) return;
@@ -52,9 +55,12 @@ const ExcalidrawWrapper = forwardRef<ExcalidrawWrapperRef, ExcalidrawWrapperProp
         const source = serializer.serializeToString(svg);
         const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
         const a = document.createElement("a");
+        a.style.display = "none";
         a.href = url;
         a.download = `${name}.svg`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
       }
     }));
 
