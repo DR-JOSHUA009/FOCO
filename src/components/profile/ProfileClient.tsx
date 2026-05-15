@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
-import { Camera, Edit2, Check, Flame, CheckSquare, Timer, Sparkles, Medal, TrendingUp, Clock, BookOpen, Lock, Unlock } from "lucide-react";
+import { Camera, Edit2, Check, Flame, CheckSquare, Timer, Sparkles, Medal, TrendingUp, Clock, BookOpen, Lock, Unlock, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { format, subDays, startOfWeek, addDays, getHours } from "date-fns";
 import { es } from "date-fns/locale";

@@ -321,7 +321,7 @@ export default function FocusClient({ pendingTasks, stats }: FocusClientProps) {
           <h3 className="font-bold text-on-surface mb-2 flex items-center gap-2">
             <Lightbulb size={18} className="text-amber-500" /> Tip de Productividad
           </h3>
-          <p className="text-sm text-on-surface-variant italic leading-relaxed">"{randomTip}"</p>
+          <p className="text-sm text-on-surface-variant italic leading-relaxed">&quot;{randomTip}&quot;</p>
         </div>
       </div>
 

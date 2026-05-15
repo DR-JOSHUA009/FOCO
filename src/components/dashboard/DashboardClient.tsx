@@ -67,7 +67,7 @@ export default function DashboardClient({
       {/* Columna Principal */}
       <div className="flex-1 space-y-8">
         <header className="mb-6">
-          <p className="text-sm font-bold text-outline uppercase tracking-widest mb-1">// DASHBOARD</p>
+          <p className="text-sm font-bold text-outline uppercase tracking-widest mb-1">{"// DASHBOARD"}</p>
           <h1 className="text-4xl font-bold text-on-surface">Hola, {profile?.nombre?.split(" ")[0] || "Estudiante"}</h1>
         </header>
 
