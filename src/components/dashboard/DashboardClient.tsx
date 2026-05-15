@@ -2,7 +2,20 @@
 
 import { useState } from "react";
 import { User, UserStats, Task, Achievement, FocusSession } from "@/types";
-import { Flame, CheckSquare, Clock, ListTodo, Plus, Award, ChevronRight, Target } from "lucide-react";
+import { Flame, CheckSquare, Clock, ListTodo, Plus, Award, ChevronRight, Target, Calendar, Crown, CheckCircle, List, Zap } from "lucide-react";
+
+// Helper para mapear el string a icono de Lucide
+const getAchievementIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'flame': return <Flame size={20} />;
+    case 'calendar': return <Calendar size={20} />;
+    case 'crown': return <Crown size={20} />;
+    case 'check-circle': return <CheckCircle size={20} />;
+    case 'list': return <List size={20} />;
+    case 'zap': return <Zap size={20} />;
+    default: return <Award size={20} />;
+  }
+};
 import TaskModal from "./TaskModal";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -228,7 +241,7 @@ export default function DashboardClient({
               return (
                 <div key={ach.id} className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${unlocked ? 'bg-surface' : 'opacity-60 grayscale'}`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xl ${unlocked ? 'bg-warning/20' : 'bg-outline-variant/30'}`}>
-                    {ach.icono}
+                    {getAchievementIcon(ach.icono)}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-bold leading-none">{ach.nombre}</p>

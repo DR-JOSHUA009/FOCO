@@ -3,10 +3,22 @@
 import { useState, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
-import { Camera, Edit2, Check, Flame, CheckSquare, Timer, Sparkles, Medal, TrendingUp, Clock, BookOpen, Lock, Unlock, Loader2 } from "lucide-react";
+import { Camera, Edit2, Check, Flame, CheckSquare, Timer, Sparkles, Medal, TrendingUp, Clock, BookOpen, Lock, Unlock, Loader2, Calendar, Crown, CheckCircle, List, Zap, Award } from "lucide-react";
 import toast from "react-hot-toast";
 import { format, subDays, startOfWeek, addDays, getHours } from "date-fns";
 import { es } from "date-fns/locale";
+
+const getAchievementIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'flame': return <Flame size={20} />;
+    case 'calendar': return <Calendar size={20} />;
+    case 'crown': return <Crown size={20} />;
+    case 'check-circle': return <CheckCircle size={20} />;
+    case 'list': return <List size={20} />;
+    case 'zap': return <Zap size={20} />;
+    default: return <Award size={20} />;
+  }
+};
 
 interface ProfileClientProps {
   profile: any;
@@ -303,7 +315,7 @@ export default function ProfileClient({ profile, stats, tasks, sessions, allAchi
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-2xl ${
                     unlocked ? 'bg-white shadow-sm' : 'bg-surface-container-high grayscale'
                   }`}>
-                    {ach.icon}
+                    {getAchievementIcon(ach.icon || ach.icono)}
                   </div>
                   <div>
                     <h4 className={`font-bold text-sm ${unlocked ? 'text-on-surface' : 'text-on-surface-variant'}`}>{ach.titulo}</h4>
