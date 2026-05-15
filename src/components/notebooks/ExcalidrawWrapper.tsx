@@ -16,13 +16,13 @@ export interface ExcalidrawWrapperRef {
 interface ExcalidrawWrapperProps {
   initialData?: any;
   onChange?: (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => void;
+  excalidrawRef?: React.RefObject<any> | React.MutableRefObject<any>;
 }
 
-const ExcalidrawWrapper = forwardRef<ExcalidrawWrapperRef, ExcalidrawWrapperProps>(
-  ({ initialData, onChange }, ref) => {
+const ExcalidrawWrapper = ({ initialData, onChange, excalidrawRef }: ExcalidrawWrapperProps) => {
     const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
 
-    useImperativeHandle(ref, () => ({
+    useImperativeHandle(excalidrawRef, () => ({
       getElements: () => excalidrawAPI?.getSceneElements() || [],
       getAppState: () => excalidrawAPI?.getAppState() || {},
       getFiles: () => excalidrawAPI?.getFiles() || {},
@@ -76,7 +76,6 @@ const ExcalidrawWrapper = forwardRef<ExcalidrawWrapperRef, ExcalidrawWrapperProp
       </div>
     );
   }
-);
+;
 
-ExcalidrawWrapper.displayName = "ExcalidrawWrapper";
 export default ExcalidrawWrapper;

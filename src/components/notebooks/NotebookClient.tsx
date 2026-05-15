@@ -153,7 +153,7 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
       {/* Canvas */}
       <div className="flex-1 bg-surface-container-lowest relative w-full h-full">
         <ExcalidrawWrapper 
-          ref={wrapperRef}
+          excalidrawRef={wrapperRef}
           initialData={initialData}
           onChange={handleExcalidrawChange}
         />
