@@ -1,11 +1,9 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Groq from "groq-sdk";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-// Simple in-memory rate limiting map
-const rateLimit = new Map<string, { count: number, resetTime: number }>();
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,16 +16,10 @@ export async function POST(req: NextRequest) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-    // Rate Limiting (20 msgs per hour)
-    const now = Date.now();
-    const userRL = rateLimit.get(user.id);
-    if (userRL && userRL.resetTime > now) {
-      if (userRL.count >= 20) {
-        return new Response("Has alcanzado el límite de mensajes por hora.", { status: 429 });
-      }
-      userRL.count += 1;
-    } else {
-      rateLimit.set(user.id, { count: 1, resetTime: now + 3600000 });
+    // Rate Limiting (20 msgs per hour = 3600000 ms)
+    const { allowed } = await checkRateLimit(`lumos:${user.id}`, 20, 3600000);
+    if (!allowed) {
+      return new Response("Has alcanzado el límite de mensajes por hora.", { status: 429 });
     }
 
     // Recopilar contexto del usuario

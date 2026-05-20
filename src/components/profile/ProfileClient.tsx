@@ -59,11 +59,23 @@ export default function ProfileClient({ profile, stats, tasks, sessions, allAchi
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) return toast.error("La imagen debe pesar menos de 2MB");
-    if (!file.type.startsWith("image/")) return toast.error("Solo se permiten imágenes");
+    
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedMimeTypes.includes(file.type)) {
+      return toast.error("Tipo de archivo no permitido. Solo se permiten imágenes (PNG, JPG, GIF, WEBP).");
+    }
 
     setIsUploading(true);
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${profile.id}-${Math.random()}.${fileExt}`;
+    const allowedExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+    const originalExt = file.name.split('.').pop()?.toLowerCase();
+
+    if (!originalExt || !allowedExtensions.includes(originalExt)) {
+      setIsUploading(false);
+      return toast.error("Extensión de archivo no permitida.");
+    }
+
+    const fileExt = originalExt;
+    const filePath = `${profile.id}-${Date.now()}-${Math.floor(Math.random() * 10000)}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage.from("avatars").upload(filePath, file);
     if (uploadError) {
