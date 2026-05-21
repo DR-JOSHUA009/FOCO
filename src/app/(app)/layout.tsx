@@ -24,8 +24,9 @@ import LumosChat from "@/components/lumos/LumosChat";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const supabase = createClient();
-  const { user, userStats, setUser, setUserStats, setLoading } = useAppStore();
+  const { user, userStats, setUser, setUserStats, setLoading, isSyncing, hydrateFromServer, syncPendingMutations } = useAppStore();
 
+  // FIX 1: Hydrate XP from server on mount — server is the source of truth
   useEffect(() => {
     const fetchUserData = async () => {
       setLoading(true);
@@ -41,7 +42,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           
         if (profile) setUser(profile as any);
 
-        // Cargar stats (racha, nivel, xp)
+        // Hydrate stats from server (source of truth for XP)
+        await hydrateFromServer();
+
+        // Also check streaks with direct query for streak-specific logic
         const { data: stats } = await supabase
           .from("user_stats")
           .select("*")
@@ -49,12 +53,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           .single();
           
         if (stats) {
-          // Check Streaks
           const updatedStats = await checkAndUpdateStreak(supabase, authUser.id, stats);
           if (updatedStats) {
             setUserStats({ ...stats, ...updatedStats } as any);
-          } else {
-            setUserStats(stats as any);
           }
         }
       }
@@ -62,7 +63,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     fetchUserData();
-  }, [supabase, setUser, setUserStats, setLoading]);
+  }, [supabase, setUser, setUserStats, setLoading, hydrateFromServer]);
+
+  // FIX 1: Sync pending offline mutations when connectivity is restored
+  useEffect(() => {
+    const handleOnline = () => {
+      syncPendingMutations();
+    };
+    window.addEventListener('online', handleOnline);
+    // Also try to sync on mount in case we came back online
+    if (navigator.onLine) syncPendingMutations();
+    return () => window.removeEventListener('online', handleOnline);
+  }, [syncPendingMutations]);
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -157,6 +169,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
+
+        {/* FIX 1: Sync indicator — shown when offline mutations are queued */}
+        {isSyncing && (
+          <div className="bg-tertiary/20 text-tertiary-dark text-xs font-bold px-4 py-1.5 flex items-center justify-center gap-2 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
+            Sincronizando...
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-8 bg-background transition-screen">

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
+import { XP_REWARDS } from "@/lib/xp-config";
 import toast from "react-hot-toast";
 import { Task } from "@/types";
 
@@ -54,7 +55,8 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
 
     setIsLoading(true);
 
-    const xpReward = formData.prioridad === 'alta' ? 50 : formData.prioridad === 'media' ? 30 : 15;
+    // FIX 2: Use centralized XP config (alta=50, media=30, baja=10)
+    const xpReward = XP_REWARDS[formData.prioridad];
     const fechaUTC = new Date(formData.fecha_entrega).toISOString();
 
     const payload = {
@@ -156,7 +158,7 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
           <div className="space-y-2">
             <label className="block text-xs font-semibold tracking-wide uppercase text-on-surface-variant flex justify-between">
               <span>Prioridad</span>
-              <span className="text-primary normal-case">XP Base: {formData.prioridad === 'alta' ? 50 : formData.prioridad === 'media' ? 30 : 15}</span>
+              <span className="text-primary normal-case">XP Base: {XP_REWARDS[formData.prioridad]}</span>
             </label>
             <div className="flex gap-3">
                 <button
