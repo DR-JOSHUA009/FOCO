@@ -159,31 +159,31 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
               <span className="text-primary normal-case">XP Base: {formData.prioridad === 'alta' ? 50 : formData.prioridad === 'media' ? 30 : 15}</span>
             </label>
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setFormData({...formData, prioridad: "alta"})}
-                className={`flex-1 py-2 rounded-lg font-semibold text-sm border-2 transition-all ${
-                  formData.prioridad === 'alta' ? 'border-[#ef4444] text-[#ef4444] bg-[#ef4444]/10' : 'border-outline-variant/30 text-on-surface-variant hover:border-[#ef4444]/50'
-                }`}
-              >
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, prioridad: "alta" })}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                    formData.prioridad === 'alta' ? 'border-error text-error bg-error/10' : 'border-outline-variant/30 text-on-surface-variant hover:border-error/50'
+                  }`}
+                >
                 🔴 Alta
               </button>
-              <button
-                type="button"
-                onClick={() => setFormData({...formData, prioridad: "media"})}
-                className={`flex-1 py-2 rounded-lg font-semibold text-sm border-2 transition-all ${
-                  formData.prioridad === 'media' ? 'border-[#f59e0b] text-[#f59e0b] bg-[#f59e0b]/10' : 'border-outline-variant/30 text-on-surface-variant hover:border-[#f59e0b]/50'
-                }`}
-              >
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, prioridad: "media" })}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                    formData.prioridad === 'media' ? 'border-tertiary text-tertiary-dark bg-tertiary/15' : 'border-outline-variant/30 text-on-surface-variant hover:border-tertiary/50'
+                  }`}
+                >
                 🟡 Media
               </button>
-              <button
-                type="button"
-                onClick={() => setFormData({...formData, prioridad: "baja"})}
-                className={`flex-1 py-2 rounded-lg font-semibold text-sm border-2 transition-all ${
-                  formData.prioridad === 'baja' ? 'border-[#22c55e] text-[#22c55e] bg-[#22c55e]/10' : 'border-outline-variant/30 text-on-surface-variant hover:border-[#22c55e]/50'
-                }`}
-              >
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, prioridad: "baja" })}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                    formData.prioridad === 'baja' ? 'border-primary text-primary-dark bg-primary/15' : 'border-outline-variant/30 text-on-surface-variant hover:border-primary/50'
+                  }`}
+                >
                 🟢 Baja
               </button>
             </div>

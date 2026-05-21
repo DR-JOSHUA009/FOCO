@@ -1,5 +1,10 @@
 import type { Config } from "tailwindcss";
 
+// ============================================
+// FOCOI — "Academic Clarity" Design System
+// Single Source of Truth for all tokens
+// ============================================
+
 const config: Config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,67 +14,72 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "background": "#fcf8ff",
-        "on-surface-variant": "#49454e",
-        "on-primary-container": "#564475",
-        "surface-tint": "#695587",
-        "on-secondary-fixed-variant": "#1e4a69",
-        "on-secondary-fixed": "#001e31",
-        "primary-container": "#cbb4ed",
-        "tertiary-container": "#c8c074",
-        "outline-variant": "#cbc4cf",
-        "primary": "#695587",
-        "inverse-on-surface": "#f2efff",
-        "tertiary": "#66601e",
-        "surface": "#fcf8ff",
-        "inverse-primary": "#d4bcf6",
-        "on-surface": "#1a1a2e",
-        "secondary-fixed": "#cce5ff",
-        "on-primary-fixed-variant": "#503e6e",
-        "secondary-container": "#b0d9fe",
-        "primary-fixed-dim": "#d4bcf6",
-        "secondary-fixed-dim": "#a2cbf0",
-        "surface-dim": "#dad7f3",
-        "on-secondary-container": "#365f7f",
-        "surface-container-low": "#f5f2ff",
-        "surface-container-lowest": "#ffffff",
-        "primary-fixed": "#ecdcff",
-        "on-tertiary-container": "#534e0d",
-        "error-container": "#ffdad6",
-        "inverse-surface": "#2f2e43",
-        "outline": "#7b757f",
-        "on-secondary": "#ffffff",
-        "on-primary": "#ffffff",
-        "on-error": "#ffffff",
-        "on-tertiary-fixed-variant": "#4d4806",
-        "secondary": "#396282",
-        "surface-bright": "#fcf8ff",
-        "tertiary-fixed-dim": "#d1c97c",
-        "on-background": "#1a1a2e",
-        "on-tertiary-fixed": "#1f1c00",
-        "surface-container-highest": "#e2e0fc",
-        "surface-variant": "#e2e0fc",
-        "on-tertiary": "#ffffff",
-        "surface-container-high": "#e8e5ff",
-        "surface-container": "#efecff",
-        "on-error-container": "#93000a",
-        "tertiary-fixed": "#eee595",
-        "error": "#ba1a1a",
-        "on-primary-fixed": "#231140",
-        "warning": "#e3a008",
-        "success": "#22c55e"
+        // ── Core Palette ──────────────────────────
+        "primary":           "#CBB4ED",  // Soft purple — brand, active states, primary buttons
+        "primary-dark":      "#b89de0",  // Hover state for primary
+        "primary-container": "#E8DEFA",  // Light purple tint for containers
+        "secondary":         "#A8D1F6",  // Sky blue — secondary actions, tags, info
+        "secondary-dark":    "#8ec0ed",  // Hover state for secondary
+        "secondary-container":"#D4E8FB", // Light blue tint for containers
+        "tertiary":          "#C8C074",  // Olive yellow — XP, streaks, highlights
+        "tertiary-dark":     "#b5ad5e",  // Hover state for tertiary
+        "tertiary-container":"#E4E0BA",  // Light olive tint for containers
+        "neutral":           "#1A1A2E",  // Dark navy — text, icons, dark surfaces
+        "neutral-dim":       "#2A2A42",  // Slightly lighter navy
+
+        // ── Surfaces ──────────────────────────────
+        "surface":           "#F4F1FB",  // Near-white lavender — card/screen bg
+        "surface-dim":       "#E6E2F0",  // Dimmed surface
+        "surface-bright":    "#FDFCFF",  // Brightest surface
+        "surface-container-lowest":  "#FFFFFF",
+        "surface-container-low":     "#F8F6FE",
+        "surface-container":         "#F0EDF7",
+        "surface-container-high":    "#EAE7F2",
+        "surface-container-highest": "#E4E1EC",
+        "surface-variant":   "#E7E0EC",  // Slightly tinted surface
+
+        // ── On-Colors (text/icon on backgrounds) ──
+        "on-surface":         "#1A1A2E",
+        "on-surface-variant": "#49454F",
+        "on-primary":         "#1A1A2E",  // Dark label on primary buttons
+        "on-secondary":       "#1A1A2E",
+        "on-tertiary":        "#1A1A2E",
+        "on-background":      "#1A1A2E",
+        "background":         "#F4F1FB",
+
+        // ── Outline & Borders ─────────────────────
+        "outline":           "#79747E",
+        "outline-variant":   "#CAC4D0",
+
+        // ── Semantic States ───────────────────────
+        "error":             "#C4384B",  // Desaturated coral (NOT pure red)
+        "error-container":   "#FFDAD6",
+        "on-error":          "#FFFFFF",
+        "on-error-container":"#8C1D18",
+        "warning":           "#C8C074",  // Reuse tertiary for warmth
+        "success":           "#8BAF7E",  // Desaturated sage green
+
+        // ── Inverse ───────────────────────────────
+        "inverse-surface":   "#1A1A2E",
+        "inverse-on-surface":"#F4F1FB",
+        "inverse-primary":   "#CBB4ED",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
-        "headline-md": ["Inter"],
-        "label-md": ["Inter"],
-        "body-md": ["Inter"],
-        "label-sm": ["Inter"],
-        "headline-lg": ["Inter"],
-        "headline-xl": ["Inter"],
-        "body-sm": ["Inter"],
-        "headline-sm": ["Inter"],
-        "body-lg": ["Inter"]
+      },
+      borderRadius: {
+        // Academic Clarity radius tokens
+        "ac-card":  "16px",
+        "ac-btn":   "12px",
+        "ac-chip":  "8px",
+        xl:  "1rem",
+        "2xl": "1.5rem",
+        "3xl": "2rem",
+      },
+      spacing: {
+        // 8pt grid additions
+        "18": "4.5rem",  // 72px
+        "22": "5.5rem",  // 88px
       },
       keyframes: {
         "fade-in": {
@@ -80,23 +90,37 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(20px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
         "pulse-soft": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.7" },
         },
+        "xp-fill": {
+          "0%": { width: "0%" },
+          "100%": { width: "var(--xp-width)" },
+        },
+        "skeleton": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
       },
       animation: {
-        "fade-in": "fade-in 0.5s ease-out forwards",
-        "slide-up": "slide-up 0.5s ease-out forwards",
+        "fade-in": "fade-in 0.3s ease-in-out forwards",
+        "slide-up": "slide-up 0.3s ease-in-out forwards",
+        "slide-in-right": "slide-in-right 0.3s ease-in-out forwards",
         "pulse-soft": "pulse-soft 2s ease-in-out infinite",
-      },
-      borderRadius: {
-        xl: "1rem",
-        "2xl": "1.5rem",
+        "xp-fill": "xp-fill 0.4s ease-out forwards",
+        "skeleton": "skeleton 1.5s ease-in-out infinite",
       },
       boxShadow: {
-        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)",
-        glow: "0 0 20px rgba(203, 180, 237, 0.3)",
+        // Subtle elevation only — no hard borders on cards
+        "soft": "0 2px 12px -2px rgba(26, 26, 46, 0.06), 0 4px 16px -4px rgba(26, 26, 46, 0.04)",
+        "card": "0 1px 8px -1px rgba(26, 26, 46, 0.05), 0 2px 12px -2px rgba(26, 26, 46, 0.03)",
+        "glow-primary": "0 0 20px rgba(203, 180, 237, 0.25)",
+        "glow-tertiary": "0 0 16px rgba(200, 192, 116, 0.20)",
       },
     },
   },

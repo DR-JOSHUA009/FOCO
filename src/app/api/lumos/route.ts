@@ -7,7 +7,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
+    const { messages, subject_id } = await req.json();
     
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -23,6 +23,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Recopilar contexto del usuario
+    let notebookMateria = null;
+    if (subject_id) {
+      const { data } = await supabase.from("notebooks").select("materia").eq("id", subject_id).single();
+      if (data) notebookMateria = data.materia;
+    }
+
+    let tasksQuery = supabase.from("tasks").select("*").eq("user_id", user.id).eq("completada", false).order("prioridad", { ascending: true });
+    if (notebookMateria) {
+      tasksQuery = tasksQuery.eq("materia", notebookMateria);
+    }
+
     const [
       { data: profile }, 
       { data: stats }, 
@@ -32,14 +43,14 @@ export async function POST(req: NextRequest) {
     ] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", user.id).single(),
       supabase.from("user_stats").select("*").eq("user_id", user.id).single(),
-      supabase.from("tasks").select("*").eq("user_id", user.id).eq("completada", false).order("prioridad", { ascending: true }),
+      tasksQuery,
       supabase.from("focus_sessions").select("*").eq("user_id", user.id).gte("created_at", new Date().toISOString().split('T')[0]),
       supabase.from("user_achievements").select(`achievement_id, achievements(titulo)`).eq("user_id", user.id)
     ]);
 
     const taskList = tasks && tasks.length > 0 
       ? tasks.map(t => `- ${t.titulo} (Prioridad: ${t.prioridad}, Fecha: ${new Date(t.fecha_entrega).toLocaleDateString()})`).join("\n") 
-      : "No hay tareas pendientes.";
+      : (notebookMateria ? `No hay tareas pendientes para ${notebookMateria}.` : "No hay tareas pendientes.");
       
     const totalFocusMinutes = sessions?.reduce((sum, s) => sum + s.duracion_minutos, 0) || 0;
     
@@ -52,7 +63,8 @@ export async function POST(req: NextRequest) {
 - Nombre: ${profile?.nombre || "Estudiante"}
 - Nivel: ${stats?.nivel || "Bronce"} con ${stats?.xp_total || 0} XP
 - Racha actual: ${stats?.racha_actual || 0} días
-- Tareas pendientes:
+${notebookMateria ? `- **ESTÁS EN LA MATERIA: ${notebookMateria}**. Limita tu enfoque y respuestas exclusivamente a esta materia y sus tareas. No menciones tareas de otras materias.` : ''}
+- Tareas pendientes ${notebookMateria ? `de ${notebookMateria}` : ''}:
 ${taskList}
 - Sesiones de foco hoy: ${sessions?.length || 0} sesiones, ${totalFocusMinutes} minutos
 - Logros desbloqueados: ${achievementsList}

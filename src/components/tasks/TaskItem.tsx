@@ -29,7 +29,7 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
     return format(d, "d MMM, yy", { locale: es });
   };
 
-  const priorityColor = task.prioridad === 'alta' ? 'bg-[#ef4444]' : task.prioridad === 'media' ? 'bg-[#f59e0b]' : 'bg-[#22c55e]';
+  const priorityColor = task.prioridad === 'alta' ? 'bg-error text-white' : task.prioridad === 'media' ? 'bg-tertiary text-neutral' : 'bg-primary text-neutral';
 
   const handleComplete = async () => {
     if (task.completada || isCompleting) return;

@@ -11,7 +11,6 @@ import {
   Timer,
   BookOpen,
   User as UserIcon,
-  MessageSquare,
   LogOut,
   Flame,
   Medal,
@@ -65,7 +64,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [supabase, setUser, setUserStats, setLoading]);
 
   const navItems = [
-    { label: "Inicio", href: "/", icon: LayoutDashboard },
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Tareas", href: "/tareas", icon: CheckSquare },
     { label: "Modo Foco", href: "/foco", icon: Timer },
@@ -74,29 +72,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-surface overflow-hidden text-on-surface">
-      {/* Sidebar - 240px */}
-      <aside className="w-[240px] h-full bg-white border-r border-outline-variant/50 flex flex-col justify-between flex-shrink-0 relative z-20">
+    <div className="flex h-screen w-full bg-background overflow-hidden text-on-surface">
+      {/* ── Sidebar (240px) — Academic Clarity ── */}
+      <aside className="w-[240px] h-full bg-surface-container-lowest flex flex-col justify-between flex-shrink-0 relative z-20 shadow-card">
         <div>
           {/* Logo */}
-          <div className="h-[64px] flex items-center px-6 border-b border-outline-variant/50">
-            <span className="font-bold text-2xl tracking-tight text-on-surface">FOCO</span>
+          <div className="h-[64px] flex items-center px-6 border-b border-outline-variant/30">
+            <span className="font-bold text-2xl tracking-tight text-neutral">FOCO</span>
             <span className="font-bold text-2xl tracking-tight text-primary">I</span>
           </div>
 
           {/* Nav */}
           <nav className="p-4 space-y-1">
             {navItems.map((item) => {
-              // Especial rule for "/" to avoid always matching startsWith
               const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
               const Icon = item.icon;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-ac-btn transition-all touch-target ${
                     isActive
-                      ? "bg-primary-container/30 text-primary font-semibold"
+                      ? "bg-primary/20 text-neutral font-semibold"
                       : "text-on-surface-variant hover:bg-surface-container"
                   }`}
                 >
@@ -109,9 +106,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* User Card */}
-        <div className="p-4 border-t border-outline-variant/50 bg-white">
+        <div className="p-4 border-t border-outline-variant/30">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-primary-container/50 flex items-center justify-center text-primary font-bold overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -126,7 +123,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <form action={logout}>
             <button
               type="submit"
-              className="w-full flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-error transition-colors px-2 py-1.5 rounded-md hover:bg-error/10"
+              className="w-full flex items-center gap-2 text-sm font-medium text-on-surface-variant hover:text-error transition-colors px-2 py-1.5 rounded-ac-chip hover:bg-error/10 touch-target"
             >
               <LogOut size={16} />
               Cerrar sesión
@@ -135,40 +132,37 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content Area */}
+      {/* ── Main Content Area ── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        {/* Topbar - 64px */}
-        <header className="h-[64px] bg-white/80 backdrop-blur-md border-b border-outline-variant/50 flex items-center justify-end px-6 gap-6 flex-shrink-0 z-10">
+        {/* Topbar (64px) — Academic Clarity */}
+        <header className="h-[64px] bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-end px-6 gap-4 flex-shrink-0 z-10">
           {/* Stats Badges */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 bg-warning/10 text-warning px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm">
-              <Flame size={16} className="fill-warning text-warning" />
+          <div className="flex items-center gap-3">
+            {/* Streak — tertiary accent */}
+            <div className="flex items-center gap-1.5 bg-tertiary/15 text-tertiary-dark px-3 py-1.5 rounded-ac-chip text-sm font-semibold touch-target">
+              <Flame size={16} className="fill-tertiary text-tertiary" />
               {userStats?.racha_actual || 0}d
             </div>
-            <div className="flex items-center gap-1.5 bg-primary-container/40 text-primary px-3 py-1.5 rounded-full text-sm font-semibold capitalize shadow-sm">
-              <Medal size={16} />
+            {/* Level — primary accent */}
+            <div className="flex items-center gap-1.5 bg-primary/15 text-neutral px-3 py-1.5 rounded-ac-chip text-sm font-semibold capitalize touch-target">
+              <Medal size={16} className="text-primary" />
               Nivel {userStats?.nivel || "Bronce"}
             </div>
-            <div className="flex items-center gap-1.5 bg-secondary-container/40 text-secondary-dark px-3 py-1.5 rounded-full text-sm font-semibold shadow-sm">
-              <Sparkles size={16} className="text-secondary" />
+            {/* XP — secondary accent */}
+            <div className="flex items-center gap-1.5 bg-secondary/15 text-neutral px-3 py-1.5 rounded-ac-chip text-sm font-semibold touch-target">
+              <Sparkles size={16} className="text-secondary-dark" />
               {userStats?.xp_total || 0} XP
             </div>
           </div>
-
-          <div className="w-px h-6 bg-outline-variant/50"></div>
-
-          {/* Lumos AI Button */}
-          <button className="flex items-center gap-2 bg-on-surface text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-on-surface/90 transition-all shadow-md hover:shadow-lg active:scale-95">
-            <MessageSquare size={16} />
-            Lumos AI
-          </button>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-8 bg-surface">
+        <main className="flex-1 overflow-y-auto p-8 bg-background transition-screen">
           {children}
         </main>
       </div>
+
+      {/* ── Lumos AI Chat Panel ── */}
       <LumosChat />
     </div>
   );

@@ -2,26 +2,148 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   FOCOI — Academic Clarity Design Foundation
+   ============================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F4F1FB;
+  --foreground: #1A1A2E;
+
+  /* Palette CSS variables for non-Tailwind usage */
+  --ac-primary: #CBB4ED;
+  --ac-secondary: #A8D1F6;
+  --ac-tertiary: #C8C074;
+  --ac-neutral: #1A1A2E;
+  --ac-surface: #F4F1FB;
+  --ac-error: #C4384B;
+
+  /* Safe area insets for notched devices */
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ── Base Reset ─────────────────────────────── */
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
+/* ── Typography Scale (Inter) ───────────────── */
+@layer base {
+  h1 { @apply text-2xl font-bold tracking-tight; }
+  h2 { @apply text-xl font-bold tracking-tight; }
+  h3 { @apply text-lg font-bold; }
+  h4 { @apply text-base font-semibold; }
+}
+
+/* ── Touch Target Enforcement ───────────────── */
 @layer utilities {
+  /* Min 44x44pt for all interactive elements */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Safe area padding */
+  .pb-safe {
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+  }
+  .pt-safe {
+    padding-top: max(0px, env(safe-area-inset-top, 0px));
+  }
+
+  /* Skeleton loading animation */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #E4E1EC 25%,
+      #F0EDF7 50%,
+      #E4E1EC 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton 1.5s ease-in-out infinite;
+    border-radius: 8px;
+  }
+
+  /* Transitions — 300ms ease-in-out standard */
+  .transition-screen {
+    transition: all 300ms ease-in-out;
+  }
+
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* ── Button Variants ────────────────────────── */
+@layer components {
+  /* Primary → filled #CBB4ED, dark navy label */
+  .btn-primary {
+    @apply bg-primary text-neutral font-bold rounded-[12px] px-6 py-3
+           hover:bg-primary-dark active:scale-[0.98]
+           transition-all duration-200 shadow-soft
+           disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px;
+  }
+
+  /* Secondary → filled #1A1A2E, white label */
+  .btn-secondary {
+    @apply bg-neutral text-white font-bold rounded-[12px] px-6 py-3
+           hover:bg-neutral-dim active:scale-[0.98]
+           transition-all duration-200
+           disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px;
+  }
+
+  /* Outlined → white fill with neutral border */
+  .btn-outlined {
+    @apply bg-white text-neutral font-semibold rounded-[12px] px-6 py-3
+           border border-outline-variant
+           hover:bg-surface active:scale-[0.98]
+           transition-all duration-200
+           disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px;
+  }
+
+  /* Inverted → transparent with primary border */
+  .btn-inverted {
+    @apply bg-transparent text-primary font-semibold rounded-[12px] px-6 py-3
+           border-2 border-primary
+           hover:bg-primary/10 active:scale-[0.98]
+           transition-all duration-200
+           disabled:opacity-50 disabled:pointer-events-none;
+    min-height: 44px;
+  }
+
+  /* Card container — Academic Clarity standard */
+  .card-ac {
+    @apply bg-surface rounded-[16px] shadow-card p-6;
+  }
+
+  /* Chip — Academic Clarity standard */
+  .chip-ac {
+    @apply rounded-[8px] px-3 py-1 text-xs font-semibold;
+  }
+}
+
+/* ── Scrollbar Styling ──────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CAC4D0;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #79747E;
 }

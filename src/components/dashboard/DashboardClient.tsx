@@ -93,7 +93,7 @@ export default function DashboardClient({
             <span className="text-2xl font-bold">{stats?.racha_actual || 0} días</span>
           </div>
           <div className="bg-white p-5 rounded-2xl border border-outline-variant/50 shadow-sm flex flex-col gap-2">
-            <div className="flex items-center gap-2 text-success font-medium text-green-500">
+            <div className="flex items-center gap-2 text-tertiary-dark font-medium">
               <CheckSquare size={18} /><span>Completadas</span>
             </div>
             <span className="text-2xl font-bold">{stats?.tareas_completadas || 0}</span>

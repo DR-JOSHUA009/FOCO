@@ -2,20 +2,18 @@
 import React, { forwardRef, useImperativeHandle, useState } from "react";
 import { Excalidraw, exportToBlob, exportToSvg } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { AppState, BinaryFiles } from "@excalidraw/excalidraw/types/types";
 
 export interface ExcalidrawWrapperRef {
-  getElements: () => readonly ExcalidrawElement[];
-  getAppState: () => AppState;
-  getFiles: () => BinaryFiles;
+  getElements: () => readonly any[];
+  getAppState: () => any;
+  getFiles: () => any;
   downloadPng: (name: string) => Promise<void>;
   downloadSvg: (name: string) => Promise<void>;
 }
 
 interface ExcalidrawWrapperProps {
   initialData?: any;
-  onChange?: (elements: readonly ExcalidrawElement[], appState: AppState, files: BinaryFiles) => void;
+  onChange?: (elements: readonly any[], appState: any, files: any) => void;
   excalidrawRef?: React.RefObject<any> | React.MutableRefObject<any>;
 }
 
