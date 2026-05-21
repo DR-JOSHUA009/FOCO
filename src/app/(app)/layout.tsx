@@ -15,6 +15,7 @@ import {
   Flame,
   Medal,
   Sparkles,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -68,6 +69,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Tareas", href: "/tareas", icon: CheckSquare },
     { label: "Modo Foco", href: "/foco", icon: Timer },
     { label: "Cuadernos", href: "/cuadernos", icon: BookOpen },
+    { label: "Comunidad", href: "/comunidad", icon: Users },
     { label: "Perfil", href: "/perfil", icon: UserIcon },
   ];
 
