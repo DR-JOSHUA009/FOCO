@@ -27,18 +27,38 @@ export default function SocialClient({ currentUserId }: { currentUserId: string 
       
       {/* ── Main Content Area ── */}
       <div className="flex-1 overflow-hidden relative flex flex-col">
-        {activeTab === "sala" && (
-          inRoom ? <InRoomView roomId={inRoom} onLeave={() => setInRoom(null)} /> : <SalaLobby onJoinRoom={(id) => setInRoom(id)} />
+        {/* Comunidad Header & Segmented Control */}
+        {!inRoom && (
+          <div className="p-4 md:px-8 md:pt-8 pb-2 max-w-4xl mx-auto w-full shrink-0">
+            <h1 className="text-[22px] font-bold text-neutral font-inter mb-4">Comunidad</h1>
+            <div className="flex p-1 bg-surface-container rounded-ac-btn shadow-inner">
+              <button 
+                onClick={() => setActiveTab("sala")} 
+                className={`flex-1 py-2.5 rounded-ac-chip text-sm font-bold transition-all touch-target ${activeTab === 'sala' ? 'bg-primary text-neutral shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Sala de Estudio
+              </button>
+              <button 
+                onClick={() => setActiveTab("amigos")} 
+                className={`flex-1 py-2.5 rounded-ac-chip text-sm font-bold transition-all touch-target ${activeTab === 'amigos' ? 'bg-primary text-neutral shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}
+              >
+                Amigos
+              </button>
+            </div>
+          </div>
         )}
 
-        {activeTab === "amigos" && (
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-32 transition-screen">
-            <div className="max-w-4xl mx-auto w-full">
-              {/* Header & Segmented Control */}
+        <div className="flex-1 overflow-y-auto pb-32 transition-screen">
+          {activeTab === "sala" && (
+            inRoom ? <InRoomView roomId={inRoom} onLeave={() => setInRoom(null)} /> : <SalaLobby onJoinRoom={(id) => setInRoom(id)} />
+          )}
+
+          {activeTab === "amigos" && (
+            <div className="p-4 md:p-8 max-w-4xl mx-auto w-full pt-2">
+              {/* Sub-Segmented Control */}
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-neutral">Comunidad</h1>
-                <div className="flex p-1 bg-surface-container mt-4 rounded-ac-btn shadow-inner">
-                  <button onClick={() => setAmigosSubTab("amigos")} className={`flex-1 py-2 rounded-ac-chip text-sm font-bold transition-all touch-target ${amigosSubTab === 'amigos' ? 'bg-primary/20 text-primary-dark shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>Amigos</button>
+                <div className="flex p-1 bg-surface-container rounded-ac-btn shadow-inner">
+                  <button onClick={() => setAmigosSubTab("amigos")} className={`flex-1 py-2 rounded-ac-chip text-sm font-bold transition-all touch-target ${amigosSubTab === 'amigos' ? 'bg-primary/20 text-primary-dark shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>Lista</button>
                   <button onClick={() => setAmigosSubTab("grupos")} className={`flex-1 py-2 rounded-ac-chip text-sm font-bold transition-all touch-target ${amigosSubTab === 'grupos' ? 'bg-primary/20 text-primary-dark shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>Grupos</button>
                   <button onClick={() => setAmigosSubTab("competencias")} className={`flex-1 py-2 rounded-ac-chip text-sm font-bold transition-all touch-target ${amigosSubTab === 'competencias' ? 'bg-primary/20 text-primary-dark shadow-sm' : 'text-on-surface-variant hover:text-on-surface'}`}>Competencias</button>
                 </div>
@@ -48,44 +68,9 @@ export default function SocialClient({ currentUserId }: { currentUserId: string 
               {amigosSubTab === "grupos" && <GruposList />}
               {amigosSubTab === "competencias" && <CompetenciasList />}
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── BOTTOM TAB NAVIGATION ── */}
-      {!inRoom && (
-        <div className="absolute bottom-0 left-0 w-full bg-surface-container-lowest/90 backdrop-blur-md border-t border-outline-variant/30 px-4 py-3 pb-safe z-50 shadow-[0_-4px_20px_rgba(26,26,46,0.05)]">
-          <div className="max-w-sm mx-auto flex items-center gap-2">
-            <button 
-              onClick={() => setActiveTab("sala")}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all touch-target ${
-                activeTab === 'sala' 
-                  ? 'text-primary' 
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
-              }`}
-            >
-              <div className={`px-4 py-1 rounded-full transition-colors ${activeTab === 'sala' ? 'bg-primary/20' : 'bg-transparent'}`}>
-                <Users size={20} />
-              </div>
-              <span className="text-[10px] font-bold">Sala de Estudio</span>
-            </button>
-            
-            <button 
-              onClick={() => setActiveTab("amigos")}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-xl transition-all touch-target ${
-                activeTab === 'amigos' 
-                  ? 'text-primary' 
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50'
-              }`}
-            >
-              <div className={`px-4 py-1 rounded-full transition-colors ${activeTab === 'amigos' ? 'bg-primary/20' : 'bg-transparent'}`}>
-                <UserPlus size={20} />
-              </div>
-              <span className="text-[10px] font-bold">Amigos</span>
-            </button>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -113,9 +98,7 @@ function SalaLobby({ onJoinRoom }: { onJoinRoom: (id: string) => void }) {
 
   return (
     <div className="p-4 md:p-8 overflow-y-auto pb-32">
-      <div className="max-w-xl mx-auto w-full">
-        {/* Header */}
-        <h1 className="text-[22px] font-bold text-neutral font-inter mb-8 text-center">Sala de Estudio</h1>
+      <div className="max-w-xl mx-auto w-full pt-4">
         
         {/* CTAs */}
         <div className="px-4 space-y-3 mb-10">
