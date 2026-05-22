@@ -1,7 +1,9 @@
 "use client";
 
-import { Link2, Trophy, Medal, Lock, ChevronRight, Edit2, Bell, LogOut, Flame } from "lucide-react";
+import { useState, useRef } from "react";
+import { Link2, Trophy, Medal, Lock, ChevronRight, Edit2, Bell, LogOut, Flame, Camera, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import { updateProfile, uploadAvatar, signOutAction } from "@/app/actions/profile";
 import { LEVELS, getLevelForXP } from "@/lib/xp-config";
 
 // ============================================
@@ -26,7 +28,26 @@ export default function ProfileClient({
   allAchievements,
   unlockedAchievements,
   isPublic = false,
+  isPublic = false,
 }: ProfileClientProps) {
+  // Modal state
+  const [modal, setModal] = useState<"edit" | "notifications" | "privacy" | "logout" | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Edit state
+  const [editName, setEditName] = useState(profile?.nombre || "");
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Prefs state (optimistic)
+  const [prefs, setPrefs] = useState({
+    notif_tareas: true,
+    notif_logros: true,
+    notif_amigos: true,
+    public_profile: profile?.is_public ?? false,
+    show_streak: profile?.show_streak ?? true,
+  });
 
   const handleShare = () => {
     const token = btoa(profile?.id || "anonymous");
@@ -88,16 +109,16 @@ export default function ProfileClient({
 
       {/* ── HEADER ── */}
       <div className="w-full bg-gradient-to-b from-[#CBB4ED]/20 to-[#A8D1F6]/20 pt-8 pb-6 flex flex-col items-center">
-        <div className="w-[80px] h-[80px] rounded-full border-[3px] border-white shadow-sm overflow-hidden mb-3">
+        <div className="w-[80px] h-[80px] rounded-full border-[3px] border-white shadow-sm overflow-hidden mb-3 relative group">
           <img
-            src={profile?.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.nombre || "User"}&backgroundColor=transparent`}
+            src={avatarPreview || profile?.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.nombre || "User"}&backgroundColor=transparent`}
             alt="Avatar"
             className="w-full h-full object-cover bg-white"
           />
         </div>
 
         <h1 className="text-[22px] font-bold text-neutral font-inter text-center leading-tight">
-          {profile?.nombre || "Usuario"}
+          {editName || profile?.nombre || "Usuario"}
         </h1>
 
         <p className="text-[14px] text-primary font-bold font-inter mt-1 mb-3 text-center">
@@ -261,7 +282,7 @@ export default function ProfileClient({
         {!isPublic && (
           <div className="mt-12">
             <div className="bg-white rounded-[16px] border border-outline-variant/10 overflow-hidden shadow-sm">
-              <button className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
+              <button onClick={() => setModal("edit")} className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
                 <div className="flex items-center gap-3">
                   <Edit2 size={18} className="text-primary" />
                   <span className="text-sm font-bold text-neutral">Editar perfil</span>
@@ -269,7 +290,7 @@ export default function ProfileClient({
                 <ChevronRight size={18} className="text-neutral/40" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
+              <button onClick={() => setModal("notifications")} className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
                 <div className="flex items-center gap-3">
                   <Bell size={18} className="text-primary" />
                   <span className="text-sm font-bold text-neutral">Notificaciones</span>
@@ -277,7 +298,7 @@ export default function ProfileClient({
                 <ChevronRight size={18} className="text-neutral/40" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
+              <button onClick={() => setModal("privacy")} className="w-full flex items-center justify-between p-4 min-h-[44px] border-b border-neutral/10 hover:bg-surface touch-target text-left">
                 <div className="flex items-center gap-3">
                   <Lock size={18} className="text-primary" />
                   <span className="text-sm font-bold text-neutral">Privacidad</span>
@@ -285,7 +306,7 @@ export default function ProfileClient({
                 <ChevronRight size={18} className="text-neutral/40" />
               </button>
 
-              <button className="w-full flex items-center justify-between p-4 min-h-[44px] hover:bg-error/5 touch-target text-left">
+              <button onClick={() => setModal("logout")} className="w-full flex items-center justify-between p-4 min-h-[44px] hover:bg-error/5 touch-target text-left">
                 <div className="flex items-center gap-3">
                   <LogOut size={18} className="text-neutral/60" />
                   <span className="text-sm font-bold text-neutral/60">Cerrar sesión</span>
@@ -299,6 +320,161 @@ export default function ProfileClient({
           </div>
         )}
       </div>
+      {/* ── MODALS ── */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-neutral/40 backdrop-blur-sm animate-fade-in px-4">
+          <div className="bg-white w-full max-w-xl rounded-t-[24px] p-6 pb-safe shadow-2xl relative animate-slide-up">
+            <button onClick={() => setModal(null)} className="absolute top-4 right-4 p-2 touch-target text-neutral/60 hover:text-neutral">
+              <X size={20} />
+            </button>
+
+            {modal === "edit" && (
+              <>
+                <h3 className="text-[18px] font-bold text-neutral mb-6">Editar perfil</h3>
+                <div className="flex flex-col items-center mb-6">
+                  <div 
+                    className="w-[100px] h-[100px] rounded-full border-[3px] border-surface shadow-sm overflow-hidden mb-3 relative cursor-pointer group"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <img src={avatarPreview || profile?.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${profile?.nombre}&backgroundColor=transparent`} className="w-full h-full object-cover bg-white" />
+                    <div className="absolute inset-0 bg-neutral/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      {uploadProgress ? <Loader2 size={24} className="text-white animate-spin" /> : <Camera size={24} className="text-white" />}
+                    </div>
+                  </div>
+                  <p className="text-[12px] text-neutral/60">Toca para cambiar</p>
+                  <input 
+                    type="file" ref={fileInputRef} className="hidden" accept="image/jpeg, image/png, image/webp"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarPreview(URL.createObjectURL(file));
+                      setUploadProgress(true);
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const res = await uploadAvatar(formData);
+                      setUploadProgress(false);
+                      if (res.error) toast.error(res.error);
+                      else toast.success("Foto actualizada");
+                    }}
+                  />
+                </div>
+                
+                <div className="mb-8">
+                  <label className="text-[14px] font-bold text-neutral mb-2 block">Nombre de usuario</label>
+                  <input 
+                    type="text" value={editName} onChange={e => setEditName(e.target.value)}
+                    className="w-full h-[44px] rounded-[12px] border border-outline-variant/40 px-4 bg-surface focus:border-primary outline-none"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => setModal(null)} className="flex-1 h-[44px] font-bold rounded-[12px] text-neutral touch-target">Cancelar</button>
+                  <button 
+                    onClick={async () => {
+                      setIsLoading(true);
+                      await updateProfile({ nombre: editName });
+                      setIsLoading(false);
+                      toast.success("Perfil actualizado");
+                      setModal(null);
+                    }}
+                    disabled={isLoading}
+                    className="flex-1 h-[44px] font-bold rounded-[12px] bg-primary text-neutral shadow-sm touch-target flex justify-center items-center gap-2"
+                  >
+                    {isLoading && <Loader2 size={16} className="animate-spin" />} Guardar
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modal === "notifications" && (
+              <>
+                <h3 className="text-[18px] font-bold text-neutral mb-6">Notificaciones</h3>
+                <div className="space-y-6 mb-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-neutral text-sm">Recordatorios de tareas</h4>
+                      <p className="text-[12px] text-neutral/60">Avisos antes de la fecha de entrega</p>
+                    </div>
+                    <Switch checked={prefs.notif_tareas} onChange={() => setPrefs(p => ({...p, notif_tareas: !p.notif_tareas}))} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-neutral text-sm">Logros desbloqueados</h4>
+                      <p className="text-[12px] text-neutral/60">Notificar al ganar una insignia</p>
+                    </div>
+                    <Switch checked={prefs.notif_logros} onChange={() => setPrefs(p => ({...p, notif_logros: !p.notif_logros}))} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-neutral text-sm">Solicitudes de amistad</h4>
+                      <p className="text-[12px] text-neutral/60">Avisos de invitaciones</p>
+                    </div>
+                    <Switch checked={prefs.notif_amigos} onChange={() => setPrefs(p => ({...p, notif_amigos: !p.notif_amigos}))} />
+                  </div>
+                </div>
+                <button onClick={() => setModal(null)} className="w-full h-[44px] font-bold rounded-[12px] bg-primary text-neutral touch-target">Listo</button>
+              </>
+            )}
+
+            {modal === "privacy" && (
+              <>
+                <h3 className="text-[18px] font-bold text-neutral mb-6">Privacidad</h3>
+                <div className="space-y-6 mb-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-neutral text-sm">Perfil público</h4>
+                      <p className="text-[12px] text-neutral/60">Permite ver tu perfil con enlace</p>
+                    </div>
+                    <Switch checked={prefs.public_profile} onChange={() => setPrefs(p => ({...p, public_profile: !p.public_profile}))} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-neutral text-sm">Mostrar racha</h4>
+                      <p className="text-[12px] text-neutral/60">Otros pueden ver tus días seguidos</p>
+                    </div>
+                    <Switch checked={prefs.show_streak} onChange={() => setPrefs(p => ({...p, show_streak: !p.show_streak}))} />
+                  </div>
+                </div>
+                <button onClick={() => setModal(null)} className="w-full h-[44px] font-bold rounded-[12px] bg-primary text-neutral touch-target">Listo</button>
+              </>
+            )}
+
+            {modal === "logout" && (
+              <>
+                <h3 className="text-[18px] font-bold text-neutral mb-2">¿Cerrar sesión?</h3>
+                <p className="text-sm text-neutral/60 mb-6">Tendrás que volver a iniciar sesión para entrar a FOCOI.</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setModal(null)} className="flex-1 h-[44px] font-bold rounded-[12px] bg-surface-container text-neutral touch-target">Cancelar</button>
+                  <button 
+                    onClick={async () => {
+                      setIsLoading(true);
+                      await signOutAction();
+                      window.location.href = "/auth";
+                    }}
+                    disabled={isLoading}
+                    className="flex-1 h-[44px] font-bold rounded-[12px] bg-error text-white shadow-sm touch-target flex items-center justify-center gap-2"
+                  >
+                    {isLoading && <Loader2 size={16} className="animate-spin" />} Cerrar sesión
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Simple Switch Component
+function Switch({ checked, onChange }: { checked: boolean, onChange: () => void }) {
+  return (
+    <div 
+      className={`w-11 h-6 rounded-full flex items-center px-1 cursor-pointer transition-colors ${checked ? 'bg-primary' : 'bg-outline-variant/30'}`}
+      onClick={onChange}
+    >
+      <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </div>
   );
 }

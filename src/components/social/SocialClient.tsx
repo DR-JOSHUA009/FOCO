@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, UserPlus, Flame, Medal, Plus, Search, Clock, LogOut, Copy, MoreVertical, X } from "lucide-react";
+import { Users, UserPlus, Flame, Medal, Plus, Search, Clock, LogOut, Copy, MoreVertical, X, Loader2 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import toast from "react-hot-toast";
+import { searchUsers, sendFriendRequest, createRoom, joinRoom, getActiveRooms } from "@/app/actions/social";
 
 // ============================================
 // FIX 2: COMUNIDAD REBUILD
@@ -43,27 +44,79 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
   const [roomName, setRoomName] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
+  
+  // Dynamic state
+  const [activeRooms, setActiveRooms] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const activeRooms = [
-    { id: "uuid-1", name: "Repaso Matemáticas", host: "Lucía M.", username: "@luciam", participants: 3, duration: "Hace 12 min" },
-  ];
+  useEffect(() => {
+    getActiveRooms().then(res => {
+      if (res.rooms) setActiveRooms(res.rooms);
+    });
+  }, [sheet]); // Refresh when modals close
 
-  const handleCrearSala = () => {
-    const code = crypto.randomUUID().substring(0, 8).toUpperCase();
-    setGeneratedCode(code);
-    toast.success("Sala creada correctamente");
-    setTimeout(() => {
-      onJoinRoom(code);
-      setSheet(null);
-    }, 1500);
+  // --- Handlers ---
+  const handleSearchUser = async (e: React.FormEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    if (searchValue.length < 3) return;
+    setIsSearching(true);
+    const res = await searchUsers(searchValue);
+    setIsSearching(false);
+    if (res.error) toast.error(res.error);
+    else setSearchResults(res.users || []);
   };
 
-  const handleUnirseSala = () => {
-    if (roomCode.trim().length > 0) {
-      onJoinRoom(roomCode);
-      setSheet(null);
+  const handleSendRequest = async (e: React.MouseEvent<HTMLButtonElement>, userId: string) => {
+    const btn = e.currentTarget;
+    btn.innerText = "Enviando...";
+    btn.disabled = true;
+    
+    const res = await sendFriendRequest(userId);
+    if (res.error) {
+      toast.error(res.error);
+      btn.innerText = "Agregar";
+      btn.disabled = false;
     } else {
+      btn.innerText = "Solicitud enviada";
+      btn.className += " opacity-50";
+      toast.success("Solicitud enviada");
+    }
+  };
+
+  const handleCrearSala = async () => {
+    setIsLoading(true);
+    const res = await createRoom(roomName);
+    setIsLoading(false);
+    
+    if (res.error) {
+      toast.error(res.error);
+    } else if (res.roomCode) {
+      setGeneratedCode(res.roomCode);
+      toast.success("Sala creada correctamente");
+      setTimeout(() => {
+        onJoinRoom(res.roomCode!);
+        setSheet(null);
+      }, 1500);
+    }
+  };
+
+  const handleUnirseSala = async () => {
+    if (roomCode.trim().length === 0) {
       toast.error("Ingresa un código válido");
+      return;
+    }
+    
+    setIsLoading(true);
+    const res = await joinRoom(roomCode.trim());
+    setIsLoading(false);
+
+    if (res.error) {
+      toast.error(res.error);
+    } else {
+      onJoinRoom(roomCode.trim());
+      setSheet(null);
     }
   };
 
@@ -146,24 +199,35 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
             {sheet === "agregar" && (
               <>
                 <h3 className="text-[18px] font-bold text-neutral mb-4">Agregar amigo</h3>
-                <input 
-                  type="text" 
-                  placeholder="Buscar por @username" 
-                  value={searchValue}
-                  onChange={e => setSearchValue(e.target.value)}
-                  className="w-full h-[44px] rounded-[12px] border border-outline-variant/40 px-4 bg-surface focus:border-primary outline-none mb-4"
-                />
-                {searchValue.length > 2 && (
-                  <div className="flex items-center justify-between p-3 border border-outline-variant/30 rounded-[12px] mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-surface"></div>
-                      <span className="font-bold text-sm text-neutral">{searchValue}</span>
+                <form onSubmit={handleSearchUser} className="relative mb-4">
+                  <input 
+                    type="text" 
+                    placeholder="Buscar por username..." 
+                    value={searchValue}
+                    onChange={e => setSearchValue(e.target.value)}
+                    className="w-full h-[44px] rounded-[12px] border border-outline-variant/40 pl-4 pr-12 bg-surface focus:border-primary outline-none"
+                  />
+                  <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-primary touch-target">
+                    {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
+                  </button>
+                </form>
+                
+                <div className="space-y-3 max-h-[200px] overflow-y-auto">
+                  {searchResults.map(u => (
+                    <div key={u.id} className="flex items-center justify-between p-3 border border-outline-variant/30 rounded-[12px]">
+                      <div className="flex items-center gap-3">
+                        <img src={u.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${u.nombre}&backgroundColor=transparent`} className="w-10 h-10 rounded-full bg-surface" />
+                        <span className="font-bold text-sm text-neutral">{u.nombre}</span>
+                      </div>
+                      <button className="h-[36px] px-4 bg-primary text-neutral font-bold rounded-[8px] text-sm touch-target" onClick={(e) => handleSendRequest(e, u.id)}>
+                        Agregar
+                      </button>
                     </div>
-                    <button className="h-[36px] px-4 bg-primary text-neutral font-bold rounded-[8px] text-sm touch-target" onClick={(e) => { e.currentTarget.innerText = "Solicitud enviada"; e.currentTarget.disabled = true; e.currentTarget.className += " opacity-50"; }}>
-                      Agregar
-                    </button>
-                  </div>
-                )}
+                  ))}
+                  {searchResults.length === 0 && searchValue.length >= 3 && !isSearching && (
+                    <p className="text-sm text-center text-neutral/50 italic py-4">Presiona enter para buscar...</p>
+                  )}
+                </div>
               </>
             )}
 
@@ -185,8 +249,8 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
                     </button>
                   </div>
                 ) : (
-                  <button onClick={handleCrearSala} className="w-full h-[44px] rounded-[12px] bg-primary text-neutral font-bold touch-target">
-                    Crear
+                  <button onClick={handleCrearSala} disabled={isLoading} className="w-full h-[44px] rounded-[12px] bg-primary text-neutral font-bold touch-target flex items-center justify-center gap-2">
+                    {isLoading && <Loader2 size={16} className="animate-spin" />} Crear
                   </button>
                 )}
               </>
@@ -202,8 +266,8 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
                   onChange={e => setRoomCode(e.target.value)}
                   className="w-full h-[44px] rounded-[12px] border border-outline-variant/40 px-4 bg-surface focus:border-primary outline-none mb-6 font-mono uppercase"
                 />
-                <button onClick={handleUnirseSala} className="w-full h-[44px] rounded-[12px] bg-primary text-neutral font-bold touch-target">
-                  Unirse
+                <button onClick={handleUnirseSala} disabled={isLoading} className="w-full h-[44px] rounded-[12px] bg-primary text-neutral font-bold touch-target flex justify-center items-center gap-2">
+                  {isLoading && <Loader2 size={16} className="animate-spin" />} Unirse
                 </button>
               </>
             )}

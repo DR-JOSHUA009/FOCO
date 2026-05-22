@@ -59,6 +59,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing file or notebook_id" }, { status: 400 });
     }
 
+    // ── Create Service Role Client (Bypass RLS) ──
+    const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+    const supabaseAdmin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // ── Server-side MIME validation ──
     if (!ALLOWED_TYPES[file.type]) {
       return NextResponse.json({ 
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from("notebook_files")
       .upload(storagePath, buffer, {
         contentType: file.type,
@@ -99,11 +106,11 @@ export async function POST(req: NextRequest) {
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
-      return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+      return NextResponse.json({ error: `Upload failed: ${uploadError.message}` }, { status: 500 });
     }
 
     // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabaseAdmin.storage
       .from("notebook_files")
       .getPublicUrl(storagePath);
 
@@ -115,7 +122,7 @@ export async function POST(req: NextRequest) {
     //   transcription_status (text: 'pending'|'processing'|'completed'|'failed'),
     //   transcription_text (text nullable),
     //   created_at (timestamptz)
-    const { data: fileRecord, error: insertError } = await supabase
+    const { data: fileRecord, error: insertError } = await supabaseAdmin
       .from("notebook_file_records")
       .insert({
         user_id: user.id,
@@ -193,10 +200,14 @@ async function triggerTranscription(
   mimeType: string,
   scopeId: string
 ): Promise<void> {
-  const supabase = await createClient();
+  const { createClient: createAdminClient } = await import("@supabase/supabase-js");
+  const supabaseAdmin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   // Update status to 'processing'
-  await supabase
+  await supabaseAdmin
     .from("notebook_file_records")
     .update({ transcription_status: "processing" })
     .eq("id", fileRecordId);
@@ -228,7 +239,7 @@ async function triggerTranscription(
 
     // Placeholder: mark as completed with empty text
     // In production, replace with actual transcription result
-    await supabase
+    await supabaseAdmin
       .from("notebook_file_records")
       .update({
         transcription_status: "completed",
@@ -238,7 +249,7 @@ async function triggerTranscription(
 
   } catch (error) {
     console.error("Transcription failed for file:", fileRecordId, error);
-    await supabase
+    await supabaseAdmin
       .from("notebook_file_records")
       .update({ transcription_status: "failed" })
       .eq("id", fileRecordId);
