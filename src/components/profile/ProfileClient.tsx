@@ -28,7 +28,6 @@ export default function ProfileClient({
   allAchievements,
   unlockedAchievements,
   isPublic = false,
-  isPublic = false,
 }: ProfileClientProps) {
   // Modal state
   const [modal, setModal] = useState<"edit" | "notifications" | "privacy" | "logout" | null>(null);
