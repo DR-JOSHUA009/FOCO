@@ -5,7 +5,7 @@ import { XP_REWARDS } from "@/lib/xp-config";
 import { format, isToday, isTomorrow, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { MoreVertical, Check, Trash2, Edit2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import toast from "react-hot-toast";
 import { useAppStore } from "@/store/useAppStore";
@@ -26,6 +26,7 @@ interface TaskItemProps {
 export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const isCompletingRef = useRef(false);
   const supabase = createClient();
   const { submitXPMutation } = useAppStore();
 
@@ -49,7 +50,8 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
   const displayXP = task.completada ? task.xp_reward : XP_REWARDS[task.prioridad];
 
   const handleComplete = async () => {
-    if (task.completada || isCompleting) return;
+    if (task.completada || isCompleting || isCompletingRef.current) return;
+    isCompletingRef.current = true;
     setIsCompleting(true);
 
     // Optimistic UI update — mark task as completed immediately
@@ -72,6 +74,7 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
     }
 
     setIsCompleting(false);
+    isCompletingRef.current = false;
   };
 
   const handleDelete = async () => {

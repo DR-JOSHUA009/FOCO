@@ -390,10 +390,10 @@ function InRoomView({ roomId, onLeave }: { roomId: string, onLeave: () => void }
 
 // ── FRIENDS SCREEN ──
 function FriendsScreen({ onBack }: { onBack: () => void }) {
-  const friends = [
-    { name: "Lucía M.", username: "@luciam", streak: 12, level: "Plata" },
-    { name: "Andrés K.", username: "@andresk", streak: 4, level: "Bronce" },
-  ];
+  // [NEEDS BACKEND] In a real app, you would fetch these from the server.
+  // For now we start empty as requested.
+  const pendingRequests: any[] = [];
+  const friends: any[] = [];
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-2xl mx-auto w-full animate-fade-in">
@@ -405,22 +405,24 @@ function FriendsScreen({ onBack }: { onBack: () => void }) {
       </div>
 
       {/* Pending Requests */}
-      <div className="bg-white border border-outline-variant/20 shadow-sm rounded-[16px] p-4 flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-dark font-bold"><UserPlus size={18}/></div>
-          <div>
-            <p className="text-sm font-bold text-neutral">@carlosp quiere ser tu amigo</p>
+      {pendingRequests.length > 0 && (
+        <div className="bg-white border border-outline-variant/20 shadow-sm rounded-[16px] p-4 flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary-dark font-bold"><UserPlus size={18}/></div>
+            <div>
+              <p className="text-sm font-bold text-neutral">@carlosp quiere ser tu amigo</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="text-[12px] font-bold text-neutral/60 bg-surface px-3 h-[36px] rounded-[8px] touch-target">Rechazar</button>
+            <button className="text-[12px] font-bold text-neutral bg-primary px-3 h-[36px] rounded-[8px] touch-target">Aceptar</button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button className="text-[12px] font-bold text-neutral/60 bg-surface px-3 h-[36px] rounded-[8px] touch-target">Rechazar</button>
-          <button className="text-[12px] font-bold text-neutral bg-primary px-3 h-[36px] rounded-[8px] touch-target">Aceptar</button>
-        </div>
-      </div>
+      )}
 
       {/* Friends List */}
       <div className="space-y-3">
-        {friends.map((friend, i) => (
+        {friends.length > 0 ? friends.map((friend, i) => (
           <div key={i} className="bg-white rounded-[16px] shadow-sm p-4 flex items-center justify-between border border-outline-variant/10 cursor-pointer group">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-full border-[3px] border-surface bg-surface-container flex items-center justify-center overflow-hidden shrink-0">
@@ -446,7 +448,12 @@ function FriendsScreen({ onBack }: { onBack: () => void }) {
               <MoreVertical size={20} />
             </button>
           </div>
-        ))}
+        )) : (
+          <div className="text-center py-12">
+            <p className="text-[16px] font-inter text-neutral/60 mb-2">Aún no tienes amigos en FOCOI.</p>
+            <p className="text-[14px] font-inter text-neutral/50 mb-6">Busca por @username para agregar.</p>
+          </div>
+        )}
       </div>
     </div>
   );

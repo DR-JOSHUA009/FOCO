@@ -20,6 +20,15 @@ import { checkRateLimit } from "@/lib/rate-limit";
  */
 export async function POST(req: NextRequest) {
   try {
+    // ── Environment check ──
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("MISSING: SUPABASE_SERVICE_ROLE_KEY");
+      return NextResponse.json(
+        { error: "Server misconfiguration" },
+        { status: 500 }
+      );
+    }
+
     const body = await req.json();
     const { mutation_id, action, entity_id, metadata } = body;
 
@@ -39,11 +48,10 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Service Role Client (Bypass RLS) ──
-    // XP mutations must bypass RLS since users cannot update their own XP directly
     const { createClient: createAdminClient } = await import("@supabase/supabase-js");
     const supabaseAdmin = createAdminClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
     // ── Rate limit (60 XP mutations per hour) ──
@@ -53,12 +61,17 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Idempotency check ──
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: idempotencyError } = await supabaseAdmin
       .from("xp_mutations")
       .select("id")
       .eq("mutation_id", mutation_id)
       .eq("user_id", user.id)
       .single();
+
+    // If the table doesn't exist yet, skip idempotency (but log)
+    if (idempotencyError && idempotencyError.code !== "PGRST116") {
+      console.warn("xp_mutations lookup warning:", idempotencyError.message);
+    }
 
     if (existing) {
       const { data: stats } = await supabaseAdmin
@@ -73,25 +86,40 @@ export async function POST(req: NextRequest) {
 
     switch (action) {
       case "task_complete": {
-        const { data: task } = await supabaseAdmin
+        const { data: task, error: taskError } = await supabaseAdmin
           .from("tasks")
           .select("id, user_id, prioridad, completada")
           .eq("id", entity_id)
           .single();
 
-        if (!task || task.user_id !== user.id) {
+        if (taskError || !task) {
+          console.error("Task lookup error:", taskError?.message);
+          return NextResponse.json({ error: "Task not found" }, { status: 404 });
+        }
+        if (task.user_id !== user.id) {
           return NextResponse.json({ error: "Task not found" }, { status: 404 });
         }
         if (task.completada) {
-          return NextResponse.json({ error: "Task already completed" }, { status: 409 });
+          // Already completed — return current stats instead of error
+          const { data: stats } = await supabaseAdmin
+            .from("user_stats")
+            .select("*")
+            .eq("user_id", user.id)
+            .single();
+          return NextResponse.json({ success: true, duplicate: true, stats });
         }
 
         xpEarned = XP_REWARDS[task.prioridad as keyof typeof XP_REWARDS] || 10;
 
-        await supabaseAdmin
+        const { error: updateTaskError } = await supabaseAdmin
           .from("tasks")
           .update({ completada: true, xp_reward: xpEarned })
           .eq("id", entity_id);
+
+        if (updateTaskError) {
+          console.error("Failed to mark task complete:", updateTaskError);
+          return NextResponse.json({ error: "Failed to complete task" }, { status: 500 });
+        }
         break;
       }
 
@@ -114,21 +142,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Unknown action type" }, { status: 400 });
     }
 
-    await supabaseAdmin.from("xp_mutations").insert({
+    // ── Record XP mutation (best-effort — table may not exist yet) ──
+    const { error: mutationInsertError } = await supabaseAdmin.from("xp_mutations").insert({
       user_id: user.id,
       mutation_id,
       action,
       entity_id,
       xp_earned: xpEarned,
-    }).catch(console.error); // Ignore errors if table doesn't exist yet
+    });
+    if (mutationInsertError) {
+      console.warn("xp_mutations insert warning (table may not exist):", mutationInsertError.message);
+    }
 
-    const { data: currentStats } = await supabaseAdmin
+    // ── Update user_stats ──
+    const { data: currentStats, error: statsError } = await supabaseAdmin
       .from("user_stats")
       .select("*")
       .eq("user_id", user.id)
       .single();
 
-    if (!currentStats) {
+    if (statsError || !currentStats) {
+      console.error("user_stats lookup error:", statsError?.message);
       return NextResponse.json({ error: "User stats not found" }, { status: 404 });
     }
 
@@ -137,7 +171,7 @@ export async function POST(req: NextRequest) {
 
     const updates: Record<string, any> = {
       xp_total: newXP,
-      nivel: newLevel.name, // The db is storing this as a string currently based on ProfileClient
+      nivel: newLevel.name,
     };
     
     if (action === "task_complete") {
@@ -169,14 +203,13 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("XP API Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }
 
 /**
  * GET /api/xp
  * Returns the current user's XP stats.
- * Used to hydrate client state on app load/resume.
  */
 export async function GET(req: NextRequest) {
   try {
@@ -199,6 +232,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ stats });
   } catch (error: any) {
     console.error("XP GET Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
   }
 }

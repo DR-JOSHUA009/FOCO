@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Link2, Trophy, Medal, Lock, ChevronRight, Edit2, Bell, LogOut, Flame, Camera, X, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { updateProfile, uploadAvatar, signOutAction } from "@/app/actions/profile";
@@ -32,6 +33,7 @@ export default function ProfileClient({
   // Modal state
   const [modal, setModal] = useState<"edit" | "notifications" | "privacy" | "logout" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   
   // Edit state
   const [editName, setEditName] = useState(profile?.nombre || "");
@@ -352,8 +354,12 @@ export default function ProfileClient({
                       formData.append("file", file);
                       const res = await uploadAvatar(formData);
                       setUploadProgress(false);
-                      if (res.error) toast.error(res.error);
-                      else toast.success("Foto actualizada");
+                      if (res.error) {
+                        toast.error(res.error);
+                      } else {
+                        toast.success("Foto actualizada");
+                        router.refresh();
+                      }
                     }}
                   />
                 </div>
@@ -371,10 +377,15 @@ export default function ProfileClient({
                   <button 
                     onClick={async () => {
                       setIsLoading(true);
-                      await updateProfile({ nombre: editName });
+                      const res = await updateProfile({ nombre: editName });
                       setIsLoading(false);
-                      toast.success("Perfil actualizado");
-                      setModal(null);
+                      if (res.error) {
+                        toast.error(res.error);
+                      } else {
+                        toast.success("Perfil actualizado");
+                        router.refresh();
+                        setModal(null);
+                      }
                     }}
                     disabled={isLoading}
                     className="flex-1 h-[44px] font-bold rounded-[12px] bg-primary text-neutral shadow-sm touch-target flex justify-center items-center gap-2"
