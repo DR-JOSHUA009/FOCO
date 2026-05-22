@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Upload, FileText, AudioLines, Trash2, Loader2, Search, FileDown, RefreshCw, FileImage, FileCode } from "lucide-react";
 import toast from "react-hot-toast";
@@ -30,7 +30,9 @@ export default function NotebookFiles({ notebookId }: { notebookId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [uploadProgress, setUploadProgress] = useState<{ active: boolean; progress: number; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const supabase = createClient();
+  // Stabilize the supabase client reference to avoid infinite re-renders
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
 
   useEffect(() => {
     loadFiles();
@@ -54,7 +56,8 @@ export default function NotebookFiles({ notebookId }: { notebookId: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [notebookId, supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notebookId]);
 
   const loadFiles = async () => {
     setIsLoading(true);

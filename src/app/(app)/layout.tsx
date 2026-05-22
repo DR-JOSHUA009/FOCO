@@ -63,7 +63,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     fetchUserData();
-  }, [supabase, setUser, setUserStats, setLoading, hydrateFromServer]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setUser, setUserStats, setLoading, hydrateFromServer]);
 
   // FIX 1: Sync pending offline mutations when connectivity is restored
   useEffect(() => {

@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     // ── Trigger Lumos transcription pipeline (async) ──
     // Fire-and-forget: don't block the upload response
-    triggerTranscription(fileRecord.id, publicUrl, file.type, sujectId || notebookId).catch(
+    triggerTranscription(fileRecord.id, publicUrl, file.type, subjectId || notebookId).catch(
       (err) => console.error("Transcription trigger failed:", err)
     );
 
@@ -245,5 +245,3 @@ async function triggerTranscription(
   }
 }
 
-// Fix typo in variable reference
-const sujectId = ""; // This is a placeholder - actual value comes from function params
