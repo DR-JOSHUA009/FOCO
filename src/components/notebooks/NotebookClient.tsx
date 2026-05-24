@@ -3,10 +3,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Save, Image as ImageIcon, FileCode2, Edit2, Check, Loader2, PenTool, FolderOpen } from "lucide-react";
+import { ArrowLeft, Save, Image as ImageIcon, FileCode2, Edit2, Check, Loader2 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import NotebookFiles from "./NotebookFiles";
 
 // Dynamic import with SSR false is MANDATORY for Excalidraw
 const ExcalidrawWrapper = dynamic(() => import('./ExcalidrawWrapper'), { ssr: false });
@@ -14,12 +13,10 @@ const ExcalidrawWrapper = dynamic(() => import('./ExcalidrawWrapper'), { ssr: fa
 /**
  * NotebookClient — Subject notebook hub screen
  *
- * DESIGN: Academic Clarity palette
- * FUNCTIONALITY: Tab bar switches without page reload (client state)
- * AUTOSAVE: Debounced at 2s (audit requirement) — no data loss on tab switch
+ * NOTE: Archivos tab reverted. Only Lienzo remains.
+ * If 'notebook_file_records' table exists in Supabase, it can be dropped manually.
  */
 export default function NotebookClient({ notebook }: { notebook: any }) {
-  const [activeTab, setActiveTab] = useState<"lienzo" | "archivos">("lienzo");
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(notebook.nombre);
   const [isSaving, setIsSaving] = useState(false);
@@ -27,15 +24,6 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
   const supabase = createClient();
   const wrapperRef = useRef<any>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
-
-  // Save canvas state before switching tabs to prevent data loss
-  const saveBeforeTabSwitch = useCallback(async () => {
-    if (!wrapperRef.current) return;
-    const elements = wrapperRef.current.getElements();
-    const appState = wrapperRef.current.getAppState();
-    const files = wrapperRef.current.getFiles();
-    await saveToDb(elements, appState, files, true);
-  }, []);
 
   const saveToDb = useCallback(async (elements: any[], appState: any, files: any, silent = false) => {
     if (!silent) setIsSaving(true);
@@ -65,7 +53,6 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
 
   const handleExcalidrawChange = (elements: any, appState: any, files: any) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    // Autosave debounce — 2s minimum per audit requirement
     debounceTimer.current = setTimeout(() => {
       saveToDb(elements, appState, files, true);
     }, 2000);
@@ -80,14 +67,6 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
     toast.success("Cuaderno guardado");
   };
 
-  // Handle tab switch — save canvas first
-  const handleTabSwitch = async (tab: "lienzo" | "archivos") => {
-    if (activeTab === "lienzo" && tab === "archivos") {
-      await saveBeforeTabSwitch();
-    }
-    setActiveTab(tab);
-  };
-
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === 's' && (e.metaKey || e.ctrlKey)) {
@@ -99,15 +78,13 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  // Parse initial data
   const initialData = notebook.contenido_json ? (typeof notebook.contenido_json === 'string' ? JSON.parse(notebook.contenido_json) : notebook.contenido_json) : null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden -m-8">
-      {/* ── Header — Academic Clarity ── */}
+      {/* ── Header ── */}
       <div className="h-16 border-b border-outline-variant/30 bg-surface-container-lowest flex items-center justify-between px-6 shrink-0 z-10 shadow-card">
         <div className="flex items-center gap-4">
-          {/* Back — preserves canvas state via autosave */}
           <Link href="/cuadernos" className="p-2 rounded-ac-chip text-on-surface-variant hover:bg-surface-container transition-colors touch-target">
             <ArrowLeft size={20} />
           </Link>
@@ -138,7 +115,6 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {/* Subject tag — Secondary fill chip */}
               <span className="text-[11px] font-bold uppercase tracking-wider text-neutral bg-secondary/25 px-2 py-0.5 rounded-ac-chip">
                 {notebook.materia}
               </span>
@@ -149,75 +125,42 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
           </div>
         </div>
 
-        {/* ── Center Tabs — Active uses #CBB4ED underline ── */}
-        <div className="hidden md:flex items-center bg-surface-container p-1 rounded-ac-btn absolute left-1/2 -translate-x-1/2">
-          <button 
-            onClick={() => handleTabSwitch("lienzo")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-ac-chip text-sm font-semibold transition-all touch-target ${
-              activeTab === 'lienzo' 
-                ? 'bg-primary/20 text-neutral border-b-2 border-primary' 
-                : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <PenTool size={16} /> Lienzo
-          </button>
-          <button 
-            onClick={() => handleTabSwitch("archivos")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-ac-chip text-sm font-semibold transition-all touch-target ${
-              activeTab === 'archivos' 
-                ? 'bg-primary/20 text-neutral border-b-2 border-primary' 
-                : 'text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <FolderOpen size={16} /> Archivos
-          </button>
-        </div>
-
         <div className="flex items-center gap-2">
-          {activeTab === "lienzo" && (
-            <>
-              <button 
-                onClick={() => wrapperRef.current?.downloadPng(name)}
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container rounded-ac-chip transition-colors touch-target"
-                title="Descargar PNG"
-              >
-                <ImageIcon size={16} /> PNG
-              </button>
-              <button 
-                onClick={() => wrapperRef.current?.downloadSvg(name)}
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container rounded-ac-chip transition-colors touch-target"
-                title="Descargar SVG"
-              >
-                <FileCode2 size={16} /> SVG
-              </button>
-              
-              <div className="hidden lg:block w-px h-6 bg-outline-variant/30 mx-2"></div>
-              
-              {/* Save — Primary button variant */}
-              <button 
-                onClick={manualSave}
-                disabled={isSaving}
-                className="btn-primary flex items-center gap-2 !px-4 !py-2 text-sm"
-              >
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {isSaving ? "Guardando..." : "Guardar"}
-              </button>
-            </>
-          )}
+          <button 
+            onClick={() => wrapperRef.current?.downloadPng(name)}
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container rounded-ac-chip transition-colors touch-target"
+            title="Descargar PNG"
+          >
+            <ImageIcon size={16} /> PNG
+          </button>
+          <button 
+            onClick={() => wrapperRef.current?.downloadSvg(name)}
+            className="hidden lg:flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container rounded-ac-chip transition-colors touch-target"
+            title="Descargar SVG"
+          >
+            <FileCode2 size={16} /> SVG
+          </button>
+          
+          <div className="hidden lg:block w-px h-6 bg-outline-variant/30 mx-2"></div>
+          
+          <button 
+            onClick={manualSave}
+            disabled={isSaving}
+            className="btn-primary flex items-center gap-2 !px-4 !py-2 text-sm"
+          >
+            {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {isSaving ? "Guardando..." : "Guardar"}
+          </button>
         </div>
       </div>
 
       {/* ── Main Content ── */}
       <div className="flex-1 bg-surface-container-lowest relative w-full h-full transition-screen">
-        {activeTab === "lienzo" ? (
-          <ExcalidrawWrapper 
-            excalidrawRef={wrapperRef}
-            initialData={initialData}
-            onChange={handleExcalidrawChange}
-          />
-        ) : (
-          <NotebookFiles notebookId={notebook.id} />
-        )}
+        <ExcalidrawWrapper 
+          excalidrawRef={wrapperRef}
+          initialData={initialData}
+          onChange={handleExcalidrawChange}
+        />
       </div>
     </div>
   );

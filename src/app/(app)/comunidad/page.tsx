@@ -1,17 +1,11 @@
-import SocialClient from "@/components/social/SocialClient";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+// NOTE: Reverted Comunidad section.
+// If tables 'rooms', 'room_participants', and 'friend_requests' exist in Supabase, they can be manually dropped.
 
-export default async function ComunidadPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth");
-  }
-
-  // [NEEDS BACKEND] In a real app we would fetch friends, rooms, and groups here.
-  // For the UI demonstration, we will use mock data in the Client component.
-
-  return <SocialClient currentUserId={user.id} />;
+export default function ComunidadPage() {
+  return (
+    <div className="flex-1 h-full flex flex-col items-center justify-center bg-surface text-neutral font-inter p-8">
+      <h1 className="text-[32px] font-bold mb-2">Comunidad</h1>
+      <p className="text-[18px] text-neutral/60">Próximamente</p>
+    </div>
+  );
 }
