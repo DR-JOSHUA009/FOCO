@@ -37,16 +37,17 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
+  const isAuthCallback = request.nextUrl.pathname.startsWith("/auth/callback");
 
-  // If no user and not on auth page, redirect to /auth
+  // Si no hay usuario y NO es ruta pública de auth, redirigir a login
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth";
     return NextResponse.redirect(url);
   }
 
-  // If user exists and is on auth page, redirect to /dashboard
-  if (user && isAuthRoute) {
+  // Si hay usuario y está en una ruta de auth (EXCEPTO el callback), redirigir al dashboard
+  if (user && isAuthRoute && !isAuthCallback) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);

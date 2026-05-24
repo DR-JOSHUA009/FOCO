@@ -45,7 +45,14 @@ export async function login(formData: FormData) {
 
   if (error) {
     console.warn(`[Security Alert] Intento fallido de login (credenciales incorrectas o Supabase error). IP: ${ip}, Email: ${email}, Error: ${error.message}`);
-    return { error: error.message };
+    
+    let userMsg = "Error al iniciar sesión.";
+    if (error.message.includes("Invalid login credentials")) {
+      userMsg = "Correo o contraseña incorrectos.";
+    } else if (error.message.includes("Email not confirmed")) {
+      userMsg = "Confirma tu correo antes de iniciar sesión.";
+    }
+    return { error: userMsg };
   }
 
   // Redirigir al dashboard después de login exitoso
@@ -93,17 +100,26 @@ export async function register(formData: FormData) {
     password,
     options: {
       data: {
-        full_name: nombreLimpio,
+        display_name: nombreLimpio, // Added display_name
+        username: nombreLimpio,     // Added username to match SQL trigger
       },
     },
   });
 
   if (error) {
     console.warn(`[Security Alert] Intento fallido de registro (Supabase error). IP: ${ip}, Email: ${email}, Error: ${error.message}`);
-    return { error: error.message };
+    
+    let userMsg = "Error al crear la cuenta.";
+    if (error.message.includes("already registered") || error.message.includes("User already exists")) {
+      userMsg = "Este correo ya está registrado.";
+    }
+    return { error: userMsg };
   }
 
-  return { success: true };
+  // Since email confirmations are disabled, signUp logs them in automatically.
+  // Redirect directly to dashboard.
+  revalidatePath("/dashboard");
+  redirect("/dashboard");
 }
 
 export async function logout() {

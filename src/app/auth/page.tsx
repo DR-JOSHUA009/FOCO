@@ -68,14 +68,10 @@ export default function AuthPage() {
     } else {
       const res = await register(data);
       if (res?.error) {
-        let msg = "Error al registrarse.";
-        if (res.error.includes("already registered")) msg = "Este correo ya está registrado.";
-        toast.error(msg);
-      } else if (res?.success) {
-        toast.success("Revisa tu email para confirmar tu cuenta.");
-        setIsLogin(true);
-        setFormData({ ...formData, password: "", confirmPassword: "" });
+        toast.error(res.error);
       }
+      // Note: On success, register() will redirect directly to /dashboard.
+      // We don't need to show success toasts or switch tabs anymore.
     }
     setIsLoading(false);
   };
