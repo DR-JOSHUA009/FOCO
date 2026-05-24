@@ -35,7 +35,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     // 2. Generate signed URL (valid for 60 minutes)
     const { data: signedData, error: signedError } = await supabaseAdmin.storage
-      .from("notebook-files")
+      .from("notebook_files")
       .createSignedUrl(fileRecord.storage_path, 3600, {
         download: fileRecord.filename // forces browser download with the correct original filename
       });
@@ -82,7 +82,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
 
     // 2. Delete from Storage via Admin
     const { error: storageError } = await supabaseAdmin.storage
-      .from("notebook-files")
+      .from("notebook_files")
       .remove([fileRecord.storage_path]);
 
     if (storageError) {

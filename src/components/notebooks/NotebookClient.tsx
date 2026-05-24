@@ -18,6 +18,14 @@ const ExcalidrawWrapper = dynamic(() => import('./ExcalidrawWrapper'), { ssr: fa
  */
 export default function NotebookClient({ notebook }: { notebook: any }) {
   const [activeTab, setActiveTab] = useState<"lienzo" | "archivos">("lienzo");
+  
+  // Keep track of the canvas data locally so it isn't lost when the tab unmounts
+  const [canvasData, setCanvasData] = useState(
+    notebook.contenido_json 
+      ? (typeof notebook.contenido_json === 'string' ? JSON.parse(notebook.contenido_json) : notebook.contenido_json) 
+      : null
+  );
+
   const [isEditingName, setIsEditingName] = useState(false);
   const [name, setName] = useState(notebook.nombre);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,6 +47,9 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
     if (!silent) setIsSaving(true);
     const content = { elements, appState: { theme: appState.theme, viewBackgroundColor: appState.viewBackgroundColor }, files };
     
+    // Update local state so when Excalidraw remounts it has the latest data
+    setCanvasData(content);
+
     const { error } = await supabase.from("notebooks").update({ 
       contenido_json: content,
       updated_at: new Date().toISOString()
@@ -95,8 +106,6 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
     document.addEventListener('keydown', down);
     return () => document.removeEventListener('keydown', down);
   }, []);
-
-  const initialData = notebook.contenido_json ? (typeof notebook.contenido_json === 'string' ? JSON.parse(notebook.contenido_json) : notebook.contenido_json) : null;
 
   return (
     <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden -m-8">
@@ -205,7 +214,7 @@ export default function NotebookClient({ notebook }: { notebook: any }) {
         {activeTab === "lienzo" ? (
           <ExcalidrawWrapper 
             excalidrawRef={wrapperRef}
-            initialData={initialData}
+            initialData={canvasData}
             onChange={handleExcalidrawChange}
           />
         ) : (

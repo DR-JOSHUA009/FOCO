@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
     // 1. Upload to Supabase Storage (Private Bucket) using Admin
     const { error: storageError } = await supabaseAdmin.storage
-      .from("notebook-files")
+      .from("notebook_files")
       .upload(storagePath, arrayBuffer, {
         contentType: file.type,
         upsert: false,
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
       
       // TRANSACTION ROLLBACK: Delete the file from storage to prevent orphaned files
       const { error: rollbackError } = await supabaseAdmin.storage
-        .from("notebook-files")
+        .from("notebook_files")
         .remove([storagePath]);
         
       if (rollbackError) {
