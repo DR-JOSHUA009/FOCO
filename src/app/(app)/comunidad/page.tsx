@@ -30,7 +30,7 @@ export default function ComunidadPage() {
         </h1>
         
         <p className="text-xl text-on-surface-variant/80 mb-10 max-w-lg leading-relaxed font-medium">
-          Estamos construyendo un espacio de estudio inmersivo. Muy pronto podrás unirte a salas de co-working, compartir recursos y conectar con mentes enfocadas.
+          Sección en construcción, muy pronto vas a poder trabajar con tus amigos.
         </p>
 
         {/* Sneak Peek Features */}
