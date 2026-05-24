@@ -111,3 +111,26 @@ CREATE POLICY "Users can read notebook files"
   USING (bucket_id = 'notebook_files');
 
 SELECT 'All tables and buckets created successfully!' AS result;
+
+-- ==========================================
+-- NOTEBOOK FILES STORAGE (Archivos Tab)
+-- ==========================================
+CREATE TABLE public.notebook_files (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  notebook_id UUID NOT NULL REFERENCES notebooks(id) ON DELETE CASCADE,
+  filename TEXT NOT NULL,
+  original_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  file_size BIGINT NOT NULL,
+  storage_path TEXT NOT NULL,
+  public_url TEXT NOT NULL,
+  uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.notebook_files ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY ""Users see own files"" ON public.notebook_files FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY ""Users insert own files"" ON public.notebook_files FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY ""Users delete own files"" ON public.notebook_files FOR DELETE USING (auth.uid() = user_id);
+
