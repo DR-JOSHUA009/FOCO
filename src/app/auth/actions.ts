@@ -112,6 +112,8 @@ export async function register(formData: FormData) {
     let userMsg = "Error al crear la cuenta.";
     if (error.message.includes("already registered") || error.message.includes("User already exists")) {
       userMsg = "Este correo ya está registrado.";
+    } else if (error.message.includes("rate limit")) {
+      userMsg = "Límite de registros excedido por Supabase. Intenta más tarde.";
     }
     return { error: userMsg };
   }
