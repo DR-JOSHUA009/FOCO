@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS public.rooms (
   name text NOT NULL DEFAULT 'Sala de estudio',
   host_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+  canvas_state jsonb,
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;

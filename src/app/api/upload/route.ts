@@ -114,19 +114,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (insertError) {
-      console.warn("DB insert error (table may be missing):", insertError);
+      console.error("DB insert FAILED for uploaded file:", insertError);
+      // Clean up the storage upload since DB record failed
+      await supabaseAdmin.storage.from("notebook_files").remove([storagePath]).catch(() => {});
       return NextResponse.json({
-        success: true,
-        file: {
-          name: file.name,
-          url: publicUrl,
-          path: storagePath,
-          type: file.type,
-          size: file.size,
-          transcription_status: "pending",
-        },
-        warning: "File uploaded but DB record failed.",
-      });
+        error: `Archivo subido pero fallo al guardar registro: ${insertError.message}`,
+      }, { status: 500 });
     }
 
     triggerTranscription(fileRecord.id, publicUrl, file.type, subjectId || notebookId).catch(

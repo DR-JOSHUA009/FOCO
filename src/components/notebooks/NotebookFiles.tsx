@@ -131,12 +131,26 @@ export default function NotebookFiles({ notebookId }: { notebookId: string }) {
 
       const result = await response.json();
       
-      if (result.success) {
+      if (result.success && result.file) {
         toast.success("Archivo subido correctamente");
-        // Reload list to get the new DB record
-        loadFiles();
+        
+        // Optimistic update: add the file to local state immediately
+        const newFileRecord: NotebookFileRecord = {
+          id: result.file.id || crypto.randomUUID(),
+          file_name: result.file.name,
+          public_url: result.file.url,
+          created_at: new Date().toISOString(),
+          size_bytes: result.file.size,
+          mime_type: result.file.type,
+          transcription_status: result.file.transcription_status || "pending",
+          transcription_text: null,
+        };
+        setFiles(prev => [newFileRecord, ...prev]);
+        
+        // Also reload from DB in background to get the authoritative record
+        setTimeout(() => loadFiles(), 2000);
       } else {
-        throw new Error("Respuesta inválida del servidor");
+        throw new Error(result.error || "Respuesta inválida del servidor");
       }
     } catch (error: any) {
       console.error(error);
@@ -303,82 +317,86 @@ export default function NotebookFiles({ notebookId }: { notebookId: string }) {
                     const isCompleted = file.transcription_status === "completed";
 
                     return (
-                      <div key={file.id} className="card-ac !p-0 overflow-hidden hover:shadow-soft transition-shadow group flex flex-col border border-outline-variant/30">
+                      <div key={file.id} className="bg-surface rounded-[16px] p-4 shadow-sm flex flex-col border border-outline-variant/10 hover:shadow-soft transition-shadow group">
                         {/* File Header */}
-                        <div className="p-4 flex items-start gap-4 bg-surface-container-lowest">
+                        <div className="flex items-start gap-4 mb-3">
                           <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${getFileColor(file.mime_type)}`}>
                             {getFileIcon(file.mime_type)}
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-neutral truncate text-sm mb-1">{file.file_name}</h4>
+                            <h4 className="font-bold text-neutral text-sm mb-1" title={file.file_name}>
+                              {file.file_name.length > 40 ? file.file_name.substring(0, 37) + "..." : file.file_name}
+                            </h4>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold bg-surface-container-high px-2 py-0.5 rounded-ac-chip text-on-surface-variant uppercase tracking-wide">
-                                {file.mime_type.split("/")[1]?.substring(0, 4) || "FILE"}
+                              <span className="text-xs text-outline-variant">
+                                {new Date(file.created_at).toLocaleDateString("es-ES", { day: 'numeric', month: 'short', year: 'numeric' })}
                               </span>
+                              <span className="text-xs text-outline-variant font-bold">•</span>
                               <span className="text-xs text-outline-variant">
                                 {(file.size_bytes / 1024 / 1024).toFixed(2)} MB
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a href={file.public_url} target="_blank" rel="noreferrer" className="p-2 hover:bg-surface-container rounded-ac-btn text-primary touch-target" title="Descargar">
-                              <FileDown size={18} />
+                          <div className="flex items-center gap-1">
+                            <a href={file.public_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 text-xs font-bold bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-ac-btn transition-colors touch-target whitespace-nowrap">
+                              Ver archivo
                             </a>
                             <button 
                               onClick={() => handleDelete(file.id, file.public_url.split('/').pop()!)} 
-                              className="p-2 hover:bg-error-container hover:text-error rounded-ac-btn text-outline-variant touch-target" 
+                              className="p-2 hover:bg-error-container hover:text-error rounded-ac-btn text-outline-variant touch-target opacity-0 group-hover:opacity-100 transition-opacity" 
                               title="Eliminar"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} />
                             </button>
                           </div>
                         </div>
 
                         {/* Transcription Section */}
-                        <div className="border-t border-outline-variant/20 bg-surface-container-low p-3 px-4">
-                          {isProcessing && (
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                                <Loader2 size={12} className="text-primary animate-spin" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-primary">Transcribiendo con Lumos...</p>
-                                <div className="mt-1 h-2 w-24 bg-surface-container-high rounded overflow-hidden">
-                                  <div className="h-full bg-primary/50 w-full animate-pulse"></div>
+                        {(isProcessing || isFailed || isCompleted) && (
+                          <div className="pt-3 border-t border-outline-variant/20">
+                            {isProcessing && (
+                              <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                  <Loader2 size={12} className="text-primary animate-spin" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-xs font-bold text-primary">Transcribiendo con Lumos...</p>
+                                  <div className="mt-1 h-1.5 w-24 bg-surface-container-high rounded overflow-hidden">
+                                    <div className="h-full bg-primary/50 w-full animate-pulse"></div>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
-                          {isFailed && (
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-error"></div>
-                                <span className="text-xs font-bold text-error">Error al transcribir</span>
+                            {isFailed && (
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-error"></div>
+                                  <span className="text-xs font-bold text-error">Error al transcribir</span>
+                                </div>
+                                <button 
+                                  onClick={() => retryTranscription(file.id)}
+                                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-neutral bg-outline-variant/20 hover:bg-outline-variant/30 px-2 py-1 rounded touch-target"
+                                >
+                                  <RefreshCw size={10} /> Reintentar
+                                </button>
                               </div>
-                              <button 
-                                onClick={() => retryTranscription(file.id)}
-                                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant hover:text-neutral bg-surface-container px-2 py-1 rounded touch-target"
-                              >
-                                <RefreshCw size={12} /> Reintentar
-                              </button>
-                            </div>
-                          )}
+                            )}
 
-                          {isCompleted && (
-                            <div className="space-y-2">
-                              <p className="text-xs text-on-surface-variant italic line-clamp-2">
-                                "{file.transcription_text?.substring(0, 120) || "Sin texto detectado"}"
-                              </p>
-                              <button className="text-xs font-bold text-primary hover:underline flex items-center gap-1 touch-target">
-                                <FileText size={12} /> Ver transcripción completa
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
+                            {isCompleted && (
+                              <div className="space-y-1.5">
+                                <p className="text-xs text-on-surface-variant italic line-clamp-2">
+                                  "{file.transcription_text?.substring(0, 120) || "Sin texto detectado"}"
+                                </p>
+                                <button className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 touch-target">
+                                  <FileText size={10} /> Ver transcripción completa
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}

@@ -114,12 +114,15 @@ export async function createRoom(name: string) {
         return { error: "Error al crear la sala (¿faltan tablas en Supabase?)" };
       }
 
-      await supabaseAdmin
+      const { error: participantError } = await supabaseAdmin
         .from("room_participants")
         .insert({
           room_id: roomCode,
           user_id: user.id,
-        }).catch(console.error);
+        });
+      if (participantError) {
+        console.error("Error adding host as participant:", participantError);
+      }
 
       revalidatePath("/comunidad");
       return { success: true, roomCode };

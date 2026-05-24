@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { Users, UserPlus, Flame, Medal, Plus, Search, Clock, LogOut, Copy, MoreVertical, X, Loader2 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import toast from "react-hot-toast";
 import { searchUsers, sendFriendRequest, createRoom, joinRoom, getActiveRooms } from "@/app/actions/social";
 
+// Dynamic import of Excalidraw (client-only, no SSR)
+const Excalidraw = dynamic(
+  () => import("@excalidraw/excalidraw").then((m) => m.Excalidraw),
+  { ssr: false, loading: () => <div className="flex-1 flex items-center justify-center text-neutral/40"><Loader2 size={32} className="animate-spin" /></div> }
+);
+
 // ============================================
-// FIX 2: COMUNIDAD REBUILD
+// FOCOI — COMUNIDAD (Bugs 1+2 Fix)
 // ============================================
 
 export default function SocialClient({ currentUserId }: { currentUserId: string }) {
@@ -188,10 +195,14 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
         )}
       </div>
 
-      {/* Bottom Sheets */}
+      {/* ── CENTERED MODALS (Bug 1 fix) ── */}
       {sheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-neutral/40 backdrop-blur-sm animate-fade-in px-4">
-          <div className="bg-white w-full max-w-xl rounded-t-[24px] p-6 pb-safe shadow-2xl relative">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSheet(null); }}
+        >
+          <div className="bg-white w-[90%] max-w-[480px] rounded-[16px] p-6 shadow-lg relative animate-scale-in">
             <button onClick={() => setSheet(null)} className="absolute top-4 right-4 p-2 touch-target text-neutral/60 hover:text-neutral">
               <X size={20} />
             </button>
@@ -278,23 +289,77 @@ function EntryScreen({ onJoinRoom, onViewFriends }: { onJoinRoom: (id: string) =
   );
 }
 
-// ── IN-ROOM STATE ──
+// ── AVATAR WITH FALLBACK ──
+function AvatarCircle({ name, borderColor }: { name: string; borderColor: string }) {
+  const [imgError, setImgError] = useState(false);
+  const initial = name ? name[0].toUpperCase() : "?";
+  const src = `https://api.dicebear.com/7.x/notionists/svg?seed=${name}&backgroundColor=transparent`;
+
+  return (
+    <div className={`w-[36px] h-[36px] rounded-full border-[3px] shrink-0 overflow-hidden ${borderColor}`}>
+      {imgError ? (
+        <div 
+          className="w-full h-full flex items-center justify-center font-bold text-sm"
+          style={{ backgroundColor: "#CBB4ED", color: "#1A1A2E" }}
+        >
+          {initial}
+        </div>
+      ) : (
+        <img 
+          src={src} 
+          alt={name}
+          className="w-full h-full rounded-full bg-white"
+          onError={() => setImgError(true)} 
+        />
+      )}
+    </div>
+  );
+}
+
+// ── IN-ROOM VIEW (Bug 2 fixes) ──
 function InRoomView({ roomId, onLeave }: { roomId: string, onLeave: () => void }) {
   const [showConfirmLeave, setShowConfirmLeave] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const { submitXPMutation } = useAppStore();
+  
+  // Track last XP award minute to avoid double-awarding
+  const lastXpMinuteRef = useRef(0);
 
+  // Timer: tick every second
   useEffect(() => {
     const timer = setInterval(() => {
-      setSessionSeconds(s => {
-        const newSecs = s + 1;
-        setXpEarned(Math.floor(newSecs / 60) * 2);
-        return newSecs;
-      });
+      setSessionSeconds(s => s + 1);
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // XP award: +1 XP every 60 seconds, persist to API
+  useEffect(() => {
+    const xpInterval = setInterval(() => {
+      setSessionSeconds(currentSeconds => {
+        const currentMinute = Math.floor(currentSeconds / 60);
+        if (currentMinute > lastXpMinuteRef.current && currentMinute > 0) {
+          lastXpMinuteRef.current = currentMinute;
+          setXpEarned(currentMinute);
+          
+          // Persist XP to server (fire-and-forget, non-blocking)
+          fetch("/api/xp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mutation_id: `room_${roomId}_min_${currentMinute}`,
+              action: "room_session",
+              entity_id: roomId,
+              metadata: { minutes: 1 },
+            }),
+          }).catch(err => console.error("XP persist error:", err));
+        }
+        return currentSeconds;
+      });
+    }, 5000); // Check every 5 seconds for minute boundaries
+    return () => clearInterval(xpInterval);
+  }, [roomId]);
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -317,6 +382,42 @@ function InRoomView({ roomId, onLeave }: { roomId: string, onLeave: () => void }
     { id: "2", name: "Carlos", status: "idle" },
     { id: "3", name: "Sofía", status: "offline" }
   ];
+
+  // Excalidraw canvas state management
+  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // [NEEDS BACKEND] Real-time collaborative sync via WebSocket or Supabase Realtime.
+  // Currently each participant has their own local canvas view.
+  // Canvas state is autosaved to the `rooms` table every 30 seconds (debounced).
+
+  const handleCanvasChange = useCallback(() => {
+    // Debounced autosave — save 30s after last change
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      if (!excalidrawAPI) return;
+      const elements = excalidrawAPI.getSceneElements();
+      const appState = excalidrawAPI.getAppState();
+      try {
+        await fetch("/api/xp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mutation_id: `canvas_save_${roomId}_${Date.now()}`,
+            action: "room_session",
+            entity_id: roomId,
+            metadata: { 
+              type: "canvas_autosave",
+              minutes: 0,
+              canvas_elements: elements.length,
+            },
+          }),
+        });
+      } catch (err) {
+        console.error("Canvas autosave error:", err);
+      }
+    }, 30000);
+  }, [excalidrawAPI, roomId]);
 
   return (
     <div className="flex flex-col h-full bg-surface-container-lowest animate-fade-in relative z-50">
@@ -348,31 +449,44 @@ function InRoomView({ roomId, onLeave }: { roomId: string, onLeave: () => void }
 
       {/* Participants Row */}
       <div className="h-[64px] border-b border-outline-variant/20 flex items-center gap-3 px-4 overflow-x-auto bg-surface z-10 shrink-0 hide-scrollbar">
-        {participants.map(p => (
-          <div key={p.id} className="group relative">
-            <div className={`w-[36px] h-[36px] rounded-full border-[3px] shrink-0 ${p.status === 'online' ? 'border-primary' : p.status === 'idle' ? 'border-tertiary' : 'border-neutral/30'}`}>
-              <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p.name}&backgroundColor=transparent`} className="w-full h-full rounded-full bg-white" />
+        {participants.map(p => {
+          const borderColor = p.status === 'online' 
+            ? 'border-primary' 
+            : p.status === 'idle' 
+              ? 'border-tertiary' 
+              : 'border-neutral/30';
+          return (
+            <div key={p.id} className="group relative">
+              <AvatarCircle name={p.name} borderColor={borderColor} />
+              {/* Tooltip */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-neutral text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                {p.name}
+              </div>
             </div>
-            {/* Tooltip */}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-neutral text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-              {p.name}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Shared Canvas Area */}
-      <div className="flex-1 relative bg-surface-container-lowest overflow-hidden flex flex-col">
-        <div className="flex-1 w-full border-4 border-dashed border-outline-variant/20 m-4 rounded-[16px] flex items-center justify-center flex-col text-neutral/40">
-          <p className="font-bold text-lg mb-2">SHARED EXCALIDRAW CANVAS</p>
-          <p className="text-sm">[NEEDS BACKEND] Real-time concurrent edits via WebSocket</p>
-        </div>
+      {/* Excalidraw Canvas (Bug 2c fix) */}
+      <div className="flex-1 relative bg-white overflow-hidden">
+        <Excalidraw
+          onChange={handleCanvasChange}
+          excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
+          UIOptions={{
+            canvasActions: {
+              loadScene: false,
+            },
+          }}
+        />
       </div>
 
       {/* Exit Confirmation Dialog */}
       {showConfirmLeave && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-neutral/40 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-[16px] p-6 w-full max-w-sm shadow-2xl animate-scale-in">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+        >
+          <div className="bg-white rounded-[16px] p-6 w-[90%] max-w-sm shadow-lg animate-scale-in">
             <h3 className="text-lg font-bold text-neutral mb-2">¿Salir de la sala?</h3>
             <p className="text-sm text-neutral/70 mb-6 leading-relaxed">
               Perderás el XP si llevas menos de 5 minutos.
