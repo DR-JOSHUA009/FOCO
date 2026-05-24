@@ -19,9 +19,9 @@ import type { TaskPriority } from "@/types";
  * Existing completed tasks are NOT retroactively recalculated.
  */
 export const XP_REWARDS: Record<TaskPriority, number> = {
-  alta: 50,   // 🔴 Difícil → HIGH XP
+  alta: 10,   // 🔴 Difícil → LOW XP (inverted as requested)
   media: 30,  // 🟡 Medio   → MEDIUM XP (unchanged)
-  baja: 10,   // 🟢 Fácil   → LOW XP
+  baja: 50,   // 🟢 Fácil   → HIGH XP (inverted as requested)
 } as const;
 
 /**

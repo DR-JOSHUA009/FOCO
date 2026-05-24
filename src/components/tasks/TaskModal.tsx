@@ -95,16 +95,16 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-slide-up">
-        <div className="flex justify-between items-center p-6 border-b border-outline-variant/30">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm p-3 sm:p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-slide-up max-h-[95vh] sm:max-h-[90vh]">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-outline-variant/30">
           <h2 className="text-xl font-bold text-on-surface">{taskToEdit ? 'Editar Tarea' : 'Nueva Tarea'}</h2>
           <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface transition-colors p-1 rounded-md hover:bg-surface">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto max-h-[80vh]">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold tracking-wide uppercase text-on-surface-variant">Título *</label>
             <input
@@ -160,11 +160,11 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
               <span>Prioridad</span>
               <span className="text-primary normal-case">XP Base: {XP_REWARDS[formData.prioridad]}</span>
             </label>
-            <div className="flex gap-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, prioridad: "alta" })}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                  className={`py-2 text-xs sm:text-sm font-semibold rounded-ac-chip border transition-all touch-target flex items-center justify-center gap-1 ${
                     formData.prioridad === 'alta' ? 'border-error text-error bg-error/10' : 'border-outline-variant/30 text-on-surface-variant hover:border-error/50'
                   }`}
                 >
@@ -173,7 +173,7 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, prioridad: "media" })}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                  className={`py-2 text-xs sm:text-sm font-semibold rounded-ac-chip border transition-all touch-target flex items-center justify-center gap-1 ${
                     formData.prioridad === 'media' ? 'border-tertiary text-tertiary-dark bg-tertiary/15' : 'border-outline-variant/30 text-on-surface-variant hover:border-tertiary/50'
                   }`}
                 >
@@ -182,7 +182,7 @@ export default function TaskModal({ onClose, taskToEdit, userSubjects = [], onSu
                 <button
                   type="button"
                   onClick={() => setFormData({ ...formData, prioridad: "baja" })}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-ac-chip border transition-all touch-target ${
+                  className={`py-2 text-xs sm:text-sm font-semibold rounded-ac-chip border transition-all touch-target flex items-center justify-center gap-1 ${
                     formData.prioridad === 'baja' ? 'border-primary text-primary-dark bg-primary/15' : 'border-outline-variant/30 text-on-surface-variant hover:border-primary/50'
                   }`}
                 >

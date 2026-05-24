@@ -88,15 +88,15 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
   };
 
   return (
-    <div className={`group flex items-center gap-4 bg-surface-container-lowest p-4 rounded-ac-card border border-outline-variant/30 shadow-card hover:shadow-soft transition-all ${task.completada ? 'opacity-60 bg-surface-container-low' : ''}`}>
+    <div className={`group flex items-start sm:items-center gap-2.5 sm:gap-4 bg-surface-container-lowest p-3 sm:p-4 rounded-ac-card border border-outline-variant/30 shadow-card hover:shadow-soft transition-all ${task.completada ? 'opacity-60 bg-surface-container-low' : ''}`}>
       {/* Priority dot */}
-      <div className={`w-3.5 h-3.5 rounded-full flex-shrink-0 ${task.completada ? 'bg-outline-variant' : priorityColor}`}></div>
+      <div className={`w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full flex-shrink-0 mt-2 sm:mt-0 ${task.completada ? 'bg-outline-variant' : priorityColor}`}></div>
 
       {/* Complete checkbox */}
       <button
         onClick={handleComplete}
         disabled={task.completada || isCompleting}
-        className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-colors touch-target ${
+        className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg border-2 flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0 transition-colors touch-target ${
           task.completada
             ? 'bg-primary border-primary text-on-primary'
             : 'border-outline-variant/50 hover:border-primary text-transparent hover:text-primary/40'
@@ -106,16 +106,16 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
       </button>
 
       {/* Task info */}
-      <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-        <h3 className={`font-semibold text-on-surface truncate flex-1 ${task.completada ? 'line-through' : ''}`}>
+      <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-2">
+        <h3 className={`font-semibold text-sm sm:text-base text-on-surface line-clamp-2 sm:truncate leading-tight mt-0.5 sm:mt-0 ${task.completada ? 'line-through' : ''}`}>
           {task.titulo}
         </h3>
 
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] font-bold tracking-wider uppercase bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-ac-chip max-w-[120px] truncate">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-wider uppercase bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-ac-chip max-w-[100px] sm:max-w-[120px] truncate">
             {task.materia}
           </span>
-          <span className={`text-[12px] font-medium w-20 text-right ${isToday(new Date(task.fecha_entrega)) && !task.completada ? 'text-error font-bold' : 'text-on-surface-variant'}`}>
+          <span className={`text-[11px] sm:text-[12px] font-medium ${isToday(new Date(task.fecha_entrega)) && !task.completada ? 'text-error font-bold' : 'text-on-surface-variant'}`}>
             {getDateLabel(task.fecha_entrega)}
           </span>
         </div>
@@ -130,8 +130,8 @@ export default function TaskItem({ task, onUpdate, onDelete, onEdit }: TaskItemP
         ))}
       </div>
 
-      {/* XP Badge — FIX 2: Shows correct XP from centralized config */}
-      <div className="flex-shrink-0 bg-tertiary/15 text-tertiary-dark font-bold text-xs px-2.5 py-1 rounded-ac-chip border border-tertiary/20">
+      {/* XP Badge */}
+      <div className="flex-shrink-0 bg-tertiary/15 text-tertiary-dark font-bold text-[10px] sm:text-xs px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-ac-chip border border-tertiary/20 mt-1 sm:mt-0 self-start sm:self-center">
         +{displayXP} XP
       </div>
 

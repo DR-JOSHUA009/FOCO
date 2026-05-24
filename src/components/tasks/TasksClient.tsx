@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Task } from "@/types";
 import { Plus } from "lucide-react";
 import TaskFilters from "./TaskFilters";
@@ -17,6 +17,30 @@ export default function TasksClient({ initialTasks, userSubjects }: TasksClientP
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | undefined>(undefined);
+
+  // Cooldown logic
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+
+  useEffect(() => {
+    const checkCooldown = () => {
+      const lastAddedStr = localStorage.getItem("last_task_added_time");
+      if (lastAddedStr) {
+        const lastAdded = parseInt(lastAddedStr, 10);
+        const now = Date.now();
+        const tenMins = 10 * 60 * 1000;
+        const diff = now - lastAdded;
+        if (diff < tenMins) {
+          setCooldownRemaining(Math.floor((tenMins - diff) / 1000));
+        } else {
+          setCooldownRemaining(0);
+        }
+      }
+    };
+    
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +62,8 @@ export default function TasksClient({ initialTasks, userSubjects }: TasksClientP
       setTasks(prev => prev.map(t => t.id === task.id ? task : t));
     } else {
       setTasks([task, ...tasks]);
+      localStorage.setItem("last_task_added_time", Date.now().toString());
+      setCooldownRemaining(10 * 60);
     }
     setTaskToEdit(undefined);
   };
@@ -79,20 +105,33 @@ export default function TasksClient({ initialTasks, userSubjects }: TasksClientP
 
   return (
     <div className="max-w-5xl mx-auto animate-fade-in pb-12">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-on-surface flex items-center gap-3">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 w-full">
+        <div className="w-full sm:w-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold text-on-surface flex items-center gap-3">
             Mis Tareas 
-            <span className="text-sm font-medium bg-surface-container-highest px-3 py-1 rounded-full text-on-surface-variant">
+            <span className="text-xs sm:text-sm font-medium bg-surface-container-highest px-3 py-1 rounded-full text-on-surface-variant whitespace-nowrap">
               {tasks.filter(t => !t.completada).length} pendientes
             </span>
           </h1>
         </div>
         <button 
           onClick={openCreateModal}
-          className="bg-primary text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-transform hover:scale-105 active:scale-95 shadow-md shadow-primary/20"
+          disabled={cooldownRemaining > 0}
+          className={`w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-transform shadow-md ${
+            cooldownRemaining > 0 
+              ? 'bg-surface-container-high text-on-surface-variant/50 cursor-not-allowed shadow-none' 
+              : 'bg-primary text-white hover:opacity-90 hover:scale-105 active:scale-95 shadow-primary/20'
+          }`}
         >
-          <Plus size={20} /> Nueva Tarea
+          {cooldownRemaining > 0 ? (
+            <span className="tabular-nums">
+              Espera {Math.floor(cooldownRemaining / 60)}:{String(cooldownRemaining % 60).padStart(2, '0')}
+            </span>
+          ) : (
+            <>
+              <Plus size={20} /> Nueva Tarea
+            </>
+          )}
         </button>
       </header>
 
