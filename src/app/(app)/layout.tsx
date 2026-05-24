@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/store/useAppStore";
 import { logout } from "@/app/auth/actions";
@@ -16,6 +16,8 @@ import {
   Medal,
   Sparkles,
   Users,
+  Menu,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const supabase = createClient();
   const { user, userStats, setUser, setUserStats, setLoading, isSyncing, hydrateFromServer, syncPendingMutations } = useAppStore();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // FIX 1: Hydrate XP from server on mount — server is the source of truth
   useEffect(() => {
@@ -88,8 +91,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden text-on-surface">
+      
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-40 md:hidden animate-fade-in"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* ── Sidebar (240px) — Academic Clarity ── */}
-      <aside className="w-[240px] h-full bg-surface-container-lowest flex flex-col justify-between flex-shrink-0 relative z-20 shadow-card">
+      <aside 
+        className={`w-[240px] h-full bg-surface-container-lowest flex flex-col justify-between flex-shrink-0 fixed md:relative z-50 shadow-card transition-transform duration-300 ease-in-out ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         <div>
           {/* Logo */}
           <div className="h-[64px] flex items-center px-6 border-b border-outline-variant/30">
@@ -106,6 +122,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-ac-btn transition-all touch-target ${
                     isActive
                       ? "bg-primary/20 text-neutral font-semibold"
@@ -148,9 +165,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Main Content Area ── */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
         {/* Topbar (64px) — Academic Clarity */}
-        <header className="h-[64px] bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-end px-6 gap-4 flex-shrink-0 z-10">
+        <header className="h-[64px] bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between md:justify-end px-4 md:px-6 gap-4 flex-shrink-0 z-10">
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="md:hidden p-2 -ml-2 text-on-surface-variant hover:bg-surface-container rounded-ac-chip touch-target"
+          >
+            <Menu size={24} />
+          </button>
+
           {/* Stats Badges */}
           <div className="flex items-center gap-3">
             {/* Streak — tertiary accent */}
