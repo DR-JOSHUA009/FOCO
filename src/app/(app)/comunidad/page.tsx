@@ -30,7 +30,7 @@ export default function ComunidadPage() {
         </h1>
         
         <p className="text-xl text-on-surface-variant/80 mb-10 max-w-lg leading-relaxed font-medium">
-          Sección en construcción, muy pronto vas a poder trabajar con tus amigos.
+          Sección en construcción, muy pronto vas a poder competir con tus amigos.
         </p>
 
         {/* Sneak Peek Features */}
