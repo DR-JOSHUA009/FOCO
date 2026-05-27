@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Key, Plus, Sparkles, Users, Lock } from "lucide-react";
+import { Key, Plus, Sparkles, Users, Lock, LogOut, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { toast } from "react-hot-toast";
+import { createClient } from "@/lib/supabase/client";
 
 type Room = {
   id: string;
@@ -30,7 +32,9 @@ export default function SalasCoopClient({
   initialActiveRooms: Room[];
 }) {
   const router = useRouter();
+  const supabase = createClient();
   const [activeTab, setActiveTab] = useState<"activas" | "guardadas">("activas");
+  const [activeRooms, setActiveRooms] = useState<Room[]>(initialActiveRooms);
   const [savedRooms, setSavedRooms] = useState<SavedRoom[]>([]);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
 
@@ -69,6 +73,8 @@ export default function SalasCoopClient({
     setIsSubmitting(true);
     setError("");
 
+    const loadingToast = toast.loading("Creando sala...");
+
     try {
       const res = await fetch("/api/rooms/create", {
         method: "POST",
@@ -79,9 +85,10 @@ export default function SalasCoopClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Redirect to the new room
+      toast.success("Sala creada con éxito", { id: loadingToast });
       router.push(`/salas-coop/${data.room_id}`);
     } catch (err: any) {
+      toast.error(err.message || "Error al crear la sala", { id: loadingToast });
       setError(err.message || "Error al crear la sala");
       setIsSubmitting(false);
     }
@@ -93,6 +100,8 @@ export default function SalasCoopClient({
     setIsSubmitting(true);
     setError("");
 
+    const loadingToast = toast.loading("Buscando sala...");
+
     try {
       const res = await fetch("/api/rooms/join", {
         method: "POST",
@@ -103,11 +112,38 @@ export default function SalasCoopClient({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Redirect to the joined room
+      toast.success(`Unido a ${data.name}`, { id: loadingToast });
       router.push(`/salas-coop/${data.room_id}`);
     } catch (err: any) {
+      toast.error(err.message || "Código inválido", { id: loadingToast });
       setError(err.message || "Código inválido o error al unirse");
       setIsSubmitting(false);
+    }
+  };
+
+  const handleLeaveRoom = async (room: Room) => {
+    const isHost = room.host_id === userId;
+    
+    if (isHost) {
+      if (!confirm(`¿Deseas ELIMINAR la sala "${room.name}"? Se cerrará para todos.`)) return;
+      const tId = toast.loading("Eliminando sala...");
+      try {
+        await fetch(`/api/rooms/${room.id}`, { method: "DELETE" });
+        setActiveRooms(prev => prev.filter(r => r.id !== room.id));
+        toast.success("Sala eliminada", { id: tId });
+      } catch (err) {
+        toast.error("Error al eliminar", { id: tId });
+      }
+    } else {
+      if (!confirm(`¿Deseas salir de la sala "${room.name}"?`)) return;
+      const tId = toast.loading("Saliendo...");
+      try {
+        await supabase.from("room_participants").delete().eq("room_id", room.id).eq("user_id", userId);
+        setActiveRooms(prev => prev.filter(r => r.id !== room.id));
+        toast.success("Has salido de la sala", { id: tId });
+      } catch (err) {
+        toast.error("Error al salir", { id: tId });
+      }
     }
   };
 
@@ -173,14 +209,14 @@ export default function SalasCoopClient({
 
         {activeTab === "activas" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {initialActiveRooms.length === 0 ? (
+            {activeRooms.length === 0 ? (
               <div className="col-span-full py-12 text-center text-on-surface-variant bg-surface-container-lowest border border-outline-variant rounded-2xl">
                 <Users size={32} className="mx-auto mb-3 opacity-50" />
                 <p>No estás en ninguna sala activa en este momento.</p>
                 <p className="text-sm opacity-80 mt-1">Crea una sala nueva o únete con un código.</p>
               </div>
             ) : (
-              initialActiveRooms.map(room => (
+              activeRooms.map(room => (
                 <div key={room.id} className="bg-surface-container-lowest border border-outline-variant p-6 rounded-2xl flex flex-col gap-6 hover:shadow-md transition-all group">
                   <div className="flex justify-between items-start">
                     <div>
@@ -193,10 +229,17 @@ export default function SalasCoopClient({
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-4">
                       <span className="text-tertiary font-label-md text-label-md">
                         {room.participantCount}/8 participantes
                       </span>
+                      <button 
+                        onClick={() => handleLeaveRoom(room)}
+                        className="text-on-surface-variant hover:text-error transition-colors p-2 rounded-full hover:bg-error/10"
+                        title={room.host_id === userId ? "Eliminar sala" : "Salir de sala"}
+                      >
+                        {room.host_id === userId ? <Trash2 size={18} /> : <LogOut size={18} />}
+                      </button>
                     </div>
                     <button 
                       onClick={() => router.push(`/salas-coop/${room.id}`)}

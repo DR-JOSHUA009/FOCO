@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Save, Download, X as CloseIcon, User as Person } from "lucide-react";
 import { useRouter } from "next/navigation";
 import debounce from "lodash/debounce";
+import { toast } from "react-hot-toast";
 
 // Dynamically import Excalidraw to prevent SSR issues
 const Excalidraw = dynamic(() => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw), { ssr: false });
@@ -135,6 +136,7 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
 
   const handleSave = async () => {
     if (!excalidrawAPI) return;
+    const tId = toast.loading("Guardando lienzo...");
     try {
       const elements = excalidrawAPI.getSceneElements();
       const appState = excalidrawAPI.getAppState();
@@ -143,28 +145,30 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ canvas_state: { elements, appState } }),
       });
-      alert("Lienzo guardado exitosamente.");
+      toast.success("Lienzo guardado exitosamente", { id: tId });
     } catch (err) {
-      alert("Error al guardar el lienzo.");
+      toast.error("Error al guardar el lienzo", { id: tId });
     }
   };
 
   const handleDownload = async () => {
     // In a full implementation, we might use excalidraw's exportToBlob
     // For now, we simulate a manual save to local
-    alert("Función de descarga local activada.");
+    toast.success("Función de descarga local activada (Simulado)");
   };
 
   const handleClose = async () => {
     // If user is host, maybe prompt to save & close room permanently
     if (room.host_id === currentUser.id) {
       if (confirm("Eres el anfitrión. ¿Deseas cerrar y guardar esta sala de forma permanente para todos los participantes?")) {
+        const tId = toast.loading("Cerrando sala...");
         try {
           await fetch(`/api/rooms/${room.id}/save`, { method: "POST" });
           await fetch(`/api/rooms/${room.id}`, { method: "DELETE" });
+          toast.success("Sala cerrada y guardada", { id: tId });
           router.push("/salas-coop");
         } catch (err) {
-          alert("Error al cerrar la sala.");
+          toast.error("Error al cerrar la sala", { id: tId });
         }
       } else {
         router.push("/salas-coop");
