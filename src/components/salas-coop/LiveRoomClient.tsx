@@ -15,6 +15,23 @@ const ExcalidrawWithCSS = dynamic(
   { ssr: false, loading: () => <div className="flex-1 flex items-center justify-center text-on-surface-variant">Cargando pizarra...</div> }
 );
 
+/**
+ * Excalidraw stores collaborators as a Map internally, but JSON serialization
+ * (e.g. from Supabase or broadcast payloads) converts it to a plain object.
+ * Calling .forEach() on a plain object throws: "not a function".
+ * This helper always returns a proper Map.
+ */
+function normalizeAppState(appState: any): any {
+  if (!appState) return {};
+  const collaborators = appState.collaborators;
+  if (!collaborators || collaborators instanceof Map) return appState;
+  // Plain object from JSON → convert entries to Map
+  return {
+    ...appState,
+    collaborators: new Map(Object.entries(collaborators)),
+  };
+}
+
 type Room = {
   id: string;
   name: string;
@@ -81,10 +98,9 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
           isUpdatingRef.current = true;
           excalidrawAPI.updateScene({
             elements: payload.payload.elements,
-            appState: payload.payload.appState,
+            appState: normalizeAppState(payload.payload.appState),
             commitToHistory: false
           });
-          // Small delay to allow the update to finish before re-enabling broadcast
           setTimeout(() => {
             isUpdatingRef.current = false;
           }, 100);
@@ -284,14 +300,17 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
           <ExcalidrawWithCSS 
             excalidrawAPI={(api) => setExcalidrawAPI(api)}
             initialData={(() => {
-              if (!room.canvas_state) return undefined;
+              if (!room.canvas_state) {
+                // New room: no saved state, but must init collaborators as empty Map
+                return { elements: [], appState: { collaborators: new Map() } };
+              }
               let parsed = room.canvas_state;
               if (typeof parsed === 'string') {
                 try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
               }
               return {
                 elements: parsed.elements || [],
-                appState: parsed.appState || {}
+                appState: normalizeAppState(parsed.appState),
               };
             })()}
             onChange={handleChange}
