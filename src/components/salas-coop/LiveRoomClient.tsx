@@ -152,9 +152,44 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
   };
 
   const handleDownload = async () => {
-    // In a full implementation, we might use excalidraw's exportToBlob
-    // For now, we simulate a manual save to local
-    toast.success("Función de descarga local activada (Simulado)");
+    if (!excalidrawAPI) return;
+    const tId = toast.loading("Preparando descarga...");
+    try {
+      const { exportToBlob } = await import("@excalidraw/excalidraw");
+      
+      const elements = excalidrawAPI.getSceneElements();
+      const appState = excalidrawAPI.getAppState();
+      const files = excalidrawAPI.getFiles();
+
+      if (!elements || elements.length === 0) {
+        toast.error("La pizarra está vacía", { id: tId });
+        return;
+      }
+
+      const blob = await exportToBlob({
+        elements,
+        appState: {
+          ...appState,
+          exportWithDarkMode: appState.theme === "dark",
+        },
+        files,
+        mimeType: "image/png",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${room.name.replace(/\s+/g, "_")}_${room.code}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Descarga completada", { id: tId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al descargar la imagen", { id: tId });
+    }
   };
 
   const handleClose = async () => {
