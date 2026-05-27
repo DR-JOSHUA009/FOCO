@@ -3,14 +3,17 @@
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase/client";
-import { Save, Download, X as CloseIcon, User as Person } from "lucide-react";
+import { Save, Download, X as CloseIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import debounce from "lodash/debounce";
 import { toast } from "react-hot-toast";
 
-// Dynamically import Excalidraw to prevent SSR issues
-const Excalidraw = dynamic(() => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw), { ssr: false });
-import "@excalidraw/excalidraw/index.css";
+// Dynamically import Excalidraw with ssr:false to avoid crashes.
+// The CSS is imported via the wrapper file to keep it co-located with the component.
+const ExcalidrawWithCSS = dynamic(
+  () => import("./ExcalidrawWrapper"),
+  { ssr: false, loading: () => <div className="flex-1 flex items-center justify-center text-on-surface-variant">Cargando pizarra...</div> }
+);
 
 type Room = {
   id: string;
@@ -36,7 +39,10 @@ type PresenceState = {
 
 export default function LiveRoomClient({ room, currentUser }: { room: Room; currentUser: CurrentUser }) {
   const router = useRouter();
-  const supabase = createClient();
+  // Stabilize the supabase client — creating it inline re-runs on every render
+  // which breaks the useEffect dependency array and causes infinite loops.
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null);
   const [participants, setParticipants] = useState<PresenceState[]>([]);
   const channelRef = useRef<any>(null);
@@ -98,7 +104,10 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [room.id, currentUser, excalidrawAPI, supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // `supabase` is stable (via useRef). `currentUser` object ref changes on parent re-render
+  // so we only depend on its id/nombre to avoid reconnecting unnecessarily.
+  }, [room.id, currentUser.id, currentUser.nombre, excalidrawAPI]);
 
   // Handle onChange from Excalidraw with debounce
   const broadcastUpdate = useRef(
@@ -272,7 +281,7 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
       <main className="flex-1 relative w-full" style={{ minHeight: 0 }}>
         {/* Excalidraw Component */}
         <div style={{ height: "100%", width: "100%" }}>
-          <Excalidraw 
+          <ExcalidrawWithCSS 
             excalidrawAPI={(api) => setExcalidrawAPI(api)}
             initialData={(() => {
               if (!room.canvas_state) return undefined;
