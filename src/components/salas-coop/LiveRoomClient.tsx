@@ -96,11 +96,21 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
       .on("broadcast", { event: "canvas-update" }, (payload) => {
         if (excalidrawAPI && payload.payload.elements) {
           isUpdatingRef.current = true;
+          
+          // Extract only the collaborative settings from remote appState.
+          // DO NOT sync zoom, scroll, or activeTool to avoid interfering with local user!
+          const remoteAppState = payload.payload.appState || {};
+          
           excalidrawAPI.updateScene({
             elements: payload.payload.elements,
-            appState: normalizeAppState(payload.payload.appState),
+            appState: {
+              viewBackgroundColor: remoteAppState.viewBackgroundColor,
+              theme: remoteAppState.theme,
+              collaborators: normalizeAppState(remoteAppState).collaborators,
+            },
             commitToHistory: false
           });
+          
           setTimeout(() => {
             isUpdatingRef.current = false;
           }, 100);
