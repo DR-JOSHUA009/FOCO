@@ -11,44 +11,54 @@ export const dynamic = "force-dynamic";
 
 export default async function SalasCoopPage() {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user;
+  } catch {
+    redirect("/auth");
+  }
 
   if (!user) {
     redirect("/auth");
   }
 
-  // Fetch active rooms the user is in
-  const { data: participations } = await supabase
-    .from("room_participants")
-    .select(`
-      room_id,
-      rooms (
-        id,
-        name,
-        code,
-        status,
-        host_id
-      )
-    `)
-    .eq("user_id", user.id);
+  // Gracefully handle missing tables (before SQL migration runs)
+  let activeRoomsWithCounts: any[] = [];
 
-  const rawActiveRooms = participations
-    ?.map(p => p.rooms)
-    .filter(r => r && !Array.isArray(r) && r.status === "active") || [];
+  try {
+    const { data: participations } = await supabase
+      .from("room_participants")
+      .select(`
+        room_id,
+        rooms (
+          id,
+          name,
+          code,
+          status,
+          host_id
+        )
+      `)
+      .eq("user_id", user.id);
 
-  // Filter out any array types safely, ensuring type matches expected
-  const activeRooms = rawActiveRooms as any[];
+    const rawActiveRooms = (participations ?? [])
+      .map((p: any) => p.rooms)
+      .filter((r: any) => r && !Array.isArray(r) && r.status === "active");
 
-  // Fetch participant counts for each active room
-  const activeRoomsWithCounts = await Promise.all(
-    activeRooms.map(async (room) => {
-      const { count } = await supabase
-        .from("room_participants")
-        .select("*", { count: 'exact', head: true })
-        .eq("room_id", room.id);
-      return { ...room, participantCount: count || 0 };
-    })
-  );
+    activeRoomsWithCounts = await Promise.all(
+      rawActiveRooms.map(async (room: any) => {
+        const { count } = await supabase
+          .from("room_participants")
+          .select("*", { count: "exact", head: true })
+          .eq("room_id", room.id);
+        return { ...room, participantCount: count || 0 };
+      })
+    );
+  } catch {
+    // Tables don't exist yet — show empty state
+    activeRoomsWithCounts = [];
+  }
 
   return <SalasCoopClient userId={user.id} initialActiveRooms={activeRoomsWithCounts} />;
 }

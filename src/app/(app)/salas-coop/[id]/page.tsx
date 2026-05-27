@@ -10,7 +10,14 @@ export const dynamic = "force-dynamic";
 
 export default async function LiveRoomPage({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data?.user;
+  } catch {
+    redirect("/auth");
+  }
 
   if (!user) {
     redirect("/auth");
@@ -28,7 +35,6 @@ export default async function LiveRoomPage({ params }: { params: { id: string } 
   }
 
   if (room.status !== "active") {
-    // If closed, redirect to saved rooms or just back
     redirect("/salas-coop");
   }
 
@@ -41,7 +47,6 @@ export default async function LiveRoomPage({ params }: { params: { id: string } 
     .single();
 
   if (!participant) {
-    // User is not in the room. They must join through the modal or code.
     redirect("/salas-coop");
   }
 
