@@ -299,7 +299,13 @@ export default function SalasCoopClient({
       {/* Atmospheric Illustration Area */}
       <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="md:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-2xl overflow-hidden h-[240px] relative group flex items-center justify-center bg-gradient-to-br from-primary-container/20 to-surface-variant">
-           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+           <Image 
+             src="/coop_focus_workspace.png" 
+             alt="Espacio de enfoque" 
+             fill 
+             className="object-cover transition-transform duration-700 group-hover:scale-105"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10"></div>
            <div className="absolute bottom-6 left-6 z-20 text-white">
               <h5 className="font-headline-sm text-[20px] font-bold mb-1">Tu espacio de enfoque</h5>
               <p className="font-body-sm text-sm opacity-90">Únete a una sala y maximiza tu productividad hoy con herramientas colaborativas.</p>
