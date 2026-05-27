@@ -9,6 +9,7 @@ import debounce from "lodash/debounce";
 
 // Dynamically import Excalidraw to prevent SSR issues
 const Excalidraw = dynamic(() => import("@excalidraw/excalidraw").then((mod) => mod.Excalidraw), { ssr: false });
+import "@excalidraw/excalidraw/index.css";
 
 type Room = {
   id: string;
@@ -229,27 +230,29 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
       </div>
 
       {/* Main Canvas Area */}
-      <main className="flex-1 relative w-full h-full">
+      <main className="flex-1 relative w-full" style={{ minHeight: 0 }}>
         {/* Excalidraw Component */}
-        <Excalidraw 
-          excalidrawAPI={(api) => setExcalidrawAPI(api)}
-          initialData={room.canvas_state ? {
-            elements: room.canvas_state.elements || [],
-            appState: room.canvas_state.appState || {}
-          } : undefined}
-          onChange={handleChange}
-          UIOptions={{
-            canvasActions: {
-              changeViewBackgroundColor: true,
-              clearCanvas: true,
-              loadScene: false,
-              saveToActiveFile: false,
-              toggleTheme: true,
-              saveAsImage: false,
-            }
-          }}
-          theme="light"
-        />
+        <div style={{ height: "100%", width: "100%" }}>
+          <Excalidraw 
+            excalidrawAPI={(api) => setExcalidrawAPI(api)}
+            initialData={room.canvas_state ? {
+              elements: room.canvas_state.elements || [],
+              appState: room.canvas_state.appState || {}
+            } : undefined}
+            onChange={handleChange}
+            UIOptions={{
+              canvasActions: {
+                changeViewBackgroundColor: true,
+                clearCanvas: true,
+                loadScene: false,
+                saveToActiveFile: false,
+                toggleTheme: true,
+                saveAsImage: false,
+              }
+            }}
+            theme="light"
+          />
+        </div>
       </main>
     </div>
   );
