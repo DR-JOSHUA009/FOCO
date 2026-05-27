@@ -16,6 +16,7 @@ import {
   Medal,
   Sparkles,
   Users,
+  Network,
   Menu,
   X
 } from "lucide-react";
@@ -85,6 +86,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { label: "Tareas", href: "/tareas", icon: CheckSquare },
     { label: "Modo Foco", href: "/foco", icon: Timer },
     { label: "Cuadernos", href: "/cuadernos", icon: BookOpen },
+    { label: "Salas Coop", href: "/salas-coop", icon: Network },
     { label: "Comunidad", href: "/comunidad", icon: Users },
     { label: "Perfil", href: "/perfil", icon: UserIcon },
   ];
