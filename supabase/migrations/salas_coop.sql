@@ -1,5 +1,5 @@
 -- ============================================
--- SALAS COOP — Database Migration
+-- SALAS COOP — Database Migration (safe re-run)
 -- Run this in your Supabase SQL Editor
 -- ============================================
 
