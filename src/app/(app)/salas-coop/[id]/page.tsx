@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import LiveRoomClient from "@/components/salas-coop/LiveRoomClient";
+import { RoomErrorBoundary } from "@/components/salas-coop/RoomErrorBoundary";
 
 export const metadata = {
   title: "Sala en Vivo | FOCOI",
@@ -58,13 +59,15 @@ export default async function LiveRoomPage({ params }: { params: { id: string } 
     .single();
 
   return (
-    <LiveRoomClient 
-      room={room} 
-      currentUser={{
-        id: user.id,
-        nombre: profile?.nombre || "Usuario",
-        avatar_url: profile?.avatar_url || ""
-      }} 
-    />
+    <RoomErrorBoundary>
+      <LiveRoomClient 
+        room={room} 
+        currentUser={{
+          id: user.id,
+          nombre: profile?.nombre || "Usuario",
+          avatar_url: profile?.avatar_url || ""
+        }} 
+      />
+    </RoomErrorBoundary>
   );
 }
