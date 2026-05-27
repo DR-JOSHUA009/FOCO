@@ -257,13 +257,13 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
         {participants.map((p) => (
           <div key={p.id} className="flex-none flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-lg border border-outline-variant">
             {p.avatar_url ? (
-               <img src={p.avatar_url} alt={p.nombre} className="w-6 h-6 rounded-full object-cover" />
+               <img src={p.avatar_url} alt={p.nombre || 'User'} className="w-6 h-6 rounded-full object-cover" />
             ) : (
                <div className="w-6 h-6 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-xs">
-                 {p.nombre.charAt(0).toUpperCase()}
+                 {(p.nombre || 'U').charAt(0).toUpperCase()}
                </div>
             )}
-            <span className="font-bold text-xs text-on-surface">{p.nombre}</span>
+            <span className="font-bold text-xs text-on-surface">{p.nombre || 'Usuario'}</span>
           </div>
         ))}
       </div>
@@ -274,10 +274,17 @@ export default function LiveRoomClient({ room, currentUser }: { room: Room; curr
         <div style={{ height: "100%", width: "100%" }}>
           <Excalidraw 
             excalidrawAPI={(api) => setExcalidrawAPI(api)}
-            initialData={room.canvas_state ? {
-              elements: room.canvas_state.elements || [],
-              appState: room.canvas_state.appState || {}
-            } : undefined}
+            initialData={(() => {
+              if (!room.canvas_state) return undefined;
+              let parsed = room.canvas_state;
+              if (typeof parsed === 'string') {
+                try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
+              }
+              return {
+                elements: parsed.elements || [],
+                appState: parsed.appState || {}
+              };
+            })()}
             onChange={handleChange}
             UIOptions={{
               canvasActions: {
