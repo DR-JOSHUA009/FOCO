@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-// This route accepts GET requests with ?q=searchQuery
+// GET /api/community/friends/search?q=searchQuery
 export async function GET(req: Request) {
   try {
     const supabase = await createClient();
@@ -33,32 +33,50 @@ export async function GET(req: Request) {
     );
     const excludeIds = [user.id, ...relatedIds];
 
-    // Search by display_name OR username (ILIKE for case-insensitive)
-    let query = supabaseAdmin
+    // Search display_name OR username with ILIKE wildcards via supabaseAdmin (bypasses RLS)
+    // Use separate .or() filter for the text search
+    const { data: byDisplayName, error: e1 } = await supabaseAdmin
       .from('profiles')
       .select('id, username, display_name, avatar_url')
-      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+      .ilike('display_name', `%${q}%`)
+      .not('id', 'in', `(${excludeIds.join(',')})`)
       .limit(10);
 
-    if (excludeIds.length > 0) {
-      query = query.not('id', 'in', `(${excludeIds.join(',')})`);
+    if (e1) {
+      console.error('[friends/search] display_name search error:', e1);
+      return NextResponse.json({ error: e1.message }, { status: 500 });
     }
 
-    const { data: profiles, error } = await query;
+    const { data: byUsername, error: e2 } = await supabaseAdmin
+      .from('profiles')
+      .select('id, username, display_name, avatar_url')
+      .ilike('username', `%${q}%`)
+      .not('id', 'in', `(${excludeIds.join(',')})`)
+      .limit(10);
 
-    if (error) {
-      console.error('[friends/search] profilesError:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (e2) {
+      console.error('[friends/search] username search error:', e2);
+      return NextResponse.json({ error: e2.message }, { status: 500 });
     }
 
-    // Normalize: never return null display_name to the client
-    const users = (profiles || []).map((p: any) => ({
+    // Merge and deduplicate by id
+    const allResults = [...(byDisplayName || []), ...(byUsername || [])];
+    const seen = new Set<string>();
+    const unique = allResults.filter((p: any) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    }).slice(0, 10);
+
+    // Normalize: never return null values to client
+    const users = unique.map((p: any) => ({
       id: p.id,
       display_name: p.display_name || p.username || 'Usuario',
       username: p.username || '',
       avatar_url: p.avatar_url || null
     }));
 
+    console.log(`[friends/search] query="${q}" found ${users.length} results`);
     return NextResponse.json({ users });
   } catch (err: any) {
     console.error('[friends/search] unexpected error:', err);

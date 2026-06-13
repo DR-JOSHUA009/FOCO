@@ -61,6 +61,8 @@ export async function POST(req: Request) {
 
     if (profilesError) {
       console.error('[groups/create] profilesError:', profilesError);
+      // Rollback group creation
+      await supabaseAdmin.from('competition_groups').delete().eq('id', group_id);
       return NextResponse.json({ error: profilesError.message }, { status: 500 });
     }
 
@@ -69,7 +71,9 @@ export async function POST(req: Request) {
       return {
         group_id,
         user_id: id,
-        display_name: p?.display_name || p?.username || 'Usuario'
+        display_name: p?.display_name || p?.username || 'Usuario',
+        total_points: 0,
+        weeks_won: 0
       };
     });
 
@@ -79,6 +83,8 @@ export async function POST(req: Request) {
 
     if (membersError) {
       console.error('[groups/create] membersError:', membersError);
+      // Rollback group creation
+      await supabaseAdmin.from('competition_groups').delete().eq('id', group_id);
       return NextResponse.json({ error: membersError.message }, { status: 500 });
     }
 

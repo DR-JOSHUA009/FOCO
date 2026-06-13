@@ -80,6 +80,7 @@ export function CreateGroupModal() {
 
     if (res.ok) {
       router.refresh();
+      await new Promise(resolve => setTimeout(resolve, 500)); // wait for SSR refresh
       closeModal();
       showToast('¡Grupo creado correctamente!', 'success');
     } else {

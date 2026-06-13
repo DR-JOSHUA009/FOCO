@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase/admin';
 import { CreateGroupModal } from '@/components/comunidad/CreateGroupModal';
 
 export const dynamic = 'force-dynamic';
@@ -9,11 +10,15 @@ export default async function ComunidadGruposPage() {
 
   let groups: any[] = [];
   if (user) {
-    // Fetch groups user is a member of
-    const { data: memberData } = await supabase
+    // Fetch groups user is a member of (bypass RLS)
+    const { data: memberData, error } = await supabaseAdmin
       .from('group_members')
       .select('group_id, competition_groups(*)')
       .eq('user_id', user.id);
+    
+    if (error) {
+       console.error('[ComunidadGruposPage] Error fetching groups:', error);
+    }
     
     if (memberData) {
        groups = memberData.map(d => d.competition_groups);
