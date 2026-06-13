@@ -2,19 +2,21 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase/admin';
 
-export async function POST(req: Request) {
+// This route accepts GET requests with ?q=searchQuery
+export async function GET(req: Request) {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const body = await req.json();
-    const username = body.username;
+    const { searchParams } = new URL(req.url);
+    const q = searchParams.get('q')?.trim();
 
-    if (!username || typeof username !== 'string') {
-      return NextResponse.json({ error: 'Valid username required' }, { status: 400 });
+    if (!q) {
+      return NextResponse.json({ users: [] });
     }
 
+    // Get all existing friend relationships (pending or accepted) to exclude them
     const { data: friendships, error: friendsError } = await supabaseAdmin
       .from('friend_requests')
       .select('sender_id, receiver_id')
@@ -22,17 +24,21 @@ export async function POST(req: Request) {
       .in('status', ['accepted', 'pending']);
 
     if (friendsError) {
+      console.error('[friends/search] friendsError:', friendsError);
       return NextResponse.json({ error: friendsError.message }, { status: 500 });
     }
 
-    const friendIds = friendships.map(f => f.sender_id === user.id ? f.receiver_id : f.sender_id);
-    const excludeIds = [user.id, ...friendIds];
+    const relatedIds = (friendships || []).map((f: any) =>
+      f.sender_id === user.id ? f.receiver_id : f.sender_id
+    );
+    const excludeIds = [user.id, ...relatedIds];
 
+    // Search by display_name OR username (ILIKE for case-insensitive)
     let query = supabaseAdmin
       .from('profiles')
       .select('id, username, display_name, avatar_url')
-      .ilike('username', `%${username}%`)
-      .limit(20);
+      .or(`display_name.ilike.%${q}%,username.ilike.%${q}%`)
+      .limit(10);
 
     if (excludeIds.length > 0) {
       query = query.not('id', 'in', `(${excludeIds.join(',')})`);
@@ -41,11 +47,21 @@ export async function POST(req: Request) {
     const { data: profiles, error } = await query;
 
     if (error) {
+      console.error('[friends/search] profilesError:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ profiles });
+    // Normalize: never return null display_name to the client
+    const users = (profiles || []).map((p: any) => ({
+      id: p.id,
+      display_name: p.display_name || p.username || 'Usuario',
+      username: p.username || '',
+      avatar_url: p.avatar_url || null
+    }));
+
+    return NextResponse.json({ users });
   } catch (err: any) {
+    console.error('[friends/search] unexpected error:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
