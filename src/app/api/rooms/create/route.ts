@@ -71,11 +71,11 @@ export async function POST(request: Request) {
       // Get user display name
       const { data: profileData, error: profileError } = await supabaseAdmin
         .from("profiles")
-        .select("nombre")
+        .select("display_name")
         .eq("id", user.id)
         .single();
         
-      const displayName = profileData?.nombre || "Usuario";
+      const displayName = profileData?.display_name || "Usuario";
 
       // Insert host as first participant
       const { error: partError } = await supabaseAdmin
