@@ -79,9 +79,9 @@ export function CreateGroupModal() {
     const data = await res.json();
 
     if (res.ok) {
+      router.refresh();
       closeModal();
       showToast('¡Grupo creado correctamente!', 'success');
-      router.refresh();
     } else {
       setErrorMsg(data.error || 'Ocurrió un error al crear el grupo.');
     }

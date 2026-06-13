@@ -49,7 +49,7 @@ export function SearchFriends() {
     const res = await fetch('/api/community/friends/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ target_user_id: targetId })
+      body: JSON.stringify({ receiver_id: targetId })
     });
 
     if (res.ok) {
