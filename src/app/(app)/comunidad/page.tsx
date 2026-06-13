@@ -1,52 +1,70 @@
-import { Lock, Sparkles, Users, Globe, Trophy } from "lucide-react";
+import { createClient } from '@/lib/supabase/server';
+import { CreateGroupModal } from '@/components/comunidad/CreateGroupModal';
 
-export default function ComunidadPage() {
+export const dynamic = 'force-dynamic';
+
+export default async function ComunidadGruposPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let groups: any[] = [];
+  if (user) {
+    // Fetch groups user is a member of
+    const { data: memberData } = await supabase
+      .from('group_members')
+      .select('group_id, competition_groups(*)')
+      .eq('user_id', user.id);
+    
+    if (memberData) {
+       groups = memberData.map(d => d.competition_groups);
+    }
+  }
+
   return (
-    <div className="flex-1 h-full flex flex-col items-center justify-center bg-surface text-neutral font-inter relative overflow-hidden">
-      
-      {/* Decorative Orbs */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-30 pointer-events-none">
-        <div className="absolute inset-0 bg-primary/20 rounded-full blur-[100px] mix-blend-multiply animate-pulse" />
-        <div className="absolute inset-20 bg-secondary/20 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style={{ animationDelay: '1s' }} />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-2 gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-on-background mb-1">Mis Grupos</h2>
+          <p className="text-sm text-on-surface-variant">Compite con tus amigos en estos grupos activos.</p>
+        </div>
+        <CreateGroupModal />
       </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-2xl text-center px-6">
-        
-        {/* Floating Lock Icon Container */}
-        <div className="relative mb-8 group cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary to-secondary blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-700 rounded-full" />
-          
-          <div className="relative w-32 h-32 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-center shadow-2xl transition-transform duration-500 hover:scale-105 hover:-translate-y-2">
-            <Lock size={48} className="text-primary mb-1 drop-shadow-md" />
-            <div className="absolute top-2 right-2">
-              <Sparkles size={16} className="text-secondary animate-bounce" />
+      {groups.length === 0 ? (
+        <div className="bg-surface-container-low border-2 border-dashed border-outline-variant rounded-xl p-8 flex flex-col items-center justify-center text-center gap-4 group hover:bg-surface-variant transition-all">
+          <div className="w-14 h-14 rounded-full bg-surface-container-highest flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-4xl">add</span>
+          </div>
+          <div>
+            <h3 className="font-headline-sm text-headline-sm text-on-background">Crea tu equipo</h3>
+            <p className="font-body-sm text-body-sm text-on-surface-variant">Aún no estás en ningún grupo. ¡Crea uno e invita a tus amigos!</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groups.map((group) => (
+            <div key={group.id} className="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col gap-4 relative group">
+              <div className="absolute top-0 right-0 p-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${group.status === 'active' ? 'bg-tertiary-container text-on-tertiary-container' : 'bg-surface-variant text-on-surface-variant'}`}>
+                  {group.status === 'active' ? 'En competencia' : group.status === 'waiting' ? 'Esperando' : 'Finalizado'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                <span className="bg-surface-variant text-on-surface-variant px-2.5 py-1 rounded-lg text-xs font-bold w-fit uppercase tracking-wider">
+                  {group.duration_months} meses
+                </span>
+                <h3 className="text-lg font-bold text-primary truncate" title={group.name}>{group.name}</h3>
+              </div>
+              
+              <div className="mt-auto">
+                <button className="w-full bg-primary text-on-primary py-3 rounded-lg font-bold text-sm hover:opacity-90 active:scale-[0.98] transition-all">
+                  Ver grupo
+                </button>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-
-        {/* Text Content */}
-        <h1 className="text-5xl font-black mb-4 tracking-tight bg-gradient-to-r from-primary via-secondary to-primary bg-[length:200%_auto] animate-gradient-x text-transparent bg-clip-text">
-          Comunidad FOCOI
-        </h1>
-        
-        <p className="text-xl text-on-surface-variant/80 mb-10 max-w-lg leading-relaxed font-medium">
-          Sección en construcción, muy pronto vas a poder competir con tus amigos.
-        </p>
-
-        {/* Sneak Peek Features */}
-        <div className="flex gap-4 sm:gap-6 flex-wrap justify-center">
-          <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-surface-container border border-outline-variant/30 text-sm font-semibold text-on-surface shadow-sm">
-            <Users size={18} className="text-primary" /> Salas de Estudio
-          </div>
-          <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-surface-container border border-outline-variant/30 text-sm font-semibold text-on-surface shadow-sm">
-            <Globe size={18} className="text-secondary" /> Retos Globales
-          </div>
-          <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-surface-container border border-outline-variant/30 text-sm font-semibold text-on-surface shadow-sm">
-            <Trophy size={18} className="text-warning" /> Rankings de XP
-          </div>
-        </div>
-
-      </div>
+      )}
     </div>
   );
 }
